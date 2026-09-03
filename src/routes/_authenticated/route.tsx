@@ -48,18 +48,21 @@ function AuthenticatedLayout() {
   };
 
   const isAdmin = scope?.role === "subcity_admin" || scope?.role === "woreda_admin";
+  const isSubcity = scope?.role === "subcity_admin";
 
   const nav = [
-    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/dashboard", label: isSubcity ? "Command centre" : "Dashboard", icon: LayoutDashboard },
     ...(scope?.role === "zone_account" ? [{ to: "/register", label: "Register resident", icon: UserPlus }] : []),
     { to: "/residents", label: "Residents", icon: Users },
     ...(isAdmin
       ? [
+          { to: "/establishments", label: "Establishments", icon: Building2 },
           { to: "/duplicates", label: "Duplicates", icon: Copy },
           { to: "/audit", label: "Audit trail", icon: ScrollText },
           { to: "/accounts", label: "Accounts", icon: ShieldCheck },
         ]
       : []),
+    ...(isSubcity ? [{ to: "/reports", label: "Official reports", icon: FileText }] : []),
   ] as const;
 
 
