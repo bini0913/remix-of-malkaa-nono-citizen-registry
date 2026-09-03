@@ -18,6 +18,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDuplicatesRouteImport } from './routes/_authenticated/duplicates'
 import { Route as AuthenticatedEstablishmentsRouteImport } from './routes/_authenticated/establishments'
 import { Route as AuthenticatedRegisterRouteImport } from './routes/_authenticated/register'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedResidentsRouteImport } from './routes/_authenticated/residents'
 import { Route as AuthenticatedEstablishmentIdRouteImport } from './routes/_authenticated/establishment.$id'
 import { Route as AuthenticatedPersonIdRouteImport } from './routes/_authenticated/person.$id'
@@ -67,6 +68,11 @@ const AuthenticatedRegisterRoute = AuthenticatedRegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedResidentsRoute = AuthenticatedResidentsRouteImport.update({
   id: '/residents',
   path: '/residents',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/duplicates': typeof AuthenticatedDuplicatesRoute
   '/establishments': typeof AuthenticatedEstablishmentsRoute
   '/register': typeof AuthenticatedRegisterRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/residents': typeof AuthenticatedResidentsRoute
   '/establishment/$id': typeof AuthenticatedEstablishmentIdRoute
   '/person/$id': typeof AuthenticatedPersonIdRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/duplicates': typeof AuthenticatedDuplicatesRoute
   '/establishments': typeof AuthenticatedEstablishmentsRoute
   '/register': typeof AuthenticatedRegisterRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/residents': typeof AuthenticatedResidentsRoute
   '/establishment/$id': typeof AuthenticatedEstablishmentIdRoute
   '/person/$id': typeof AuthenticatedPersonIdRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/_authenticated/duplicates': typeof AuthenticatedDuplicatesRoute
   '/_authenticated/establishments': typeof AuthenticatedEstablishmentsRoute
   '/_authenticated/register': typeof AuthenticatedRegisterRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/residents': typeof AuthenticatedResidentsRoute
   '/_authenticated/establishment/$id': typeof AuthenticatedEstablishmentIdRoute
   '/_authenticated/person/$id': typeof AuthenticatedPersonIdRoute
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/duplicates'
     | '/establishments'
     | '/register'
+    | '/reports'
     | '/residents'
     | '/establishment/$id'
     | '/person/$id'
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/duplicates'
     | '/establishments'
     | '/register'
+    | '/reports'
     | '/residents'
     | '/establishment/$id'
     | '/person/$id'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/_authenticated/duplicates'
     | '/_authenticated/establishments'
     | '/_authenticated/register'
+    | '/_authenticated/reports'
     | '/_authenticated/residents'
     | '/_authenticated/establishment/$id'
     | '/_authenticated/person/$id'
@@ -239,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRegisterRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/residents': {
       id: '/_authenticated/residents'
       path: '/residents'
@@ -270,6 +289,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDuplicatesRoute: typeof AuthenticatedDuplicatesRoute
   AuthenticatedEstablishmentsRoute: typeof AuthenticatedEstablishmentsRoute
   AuthenticatedRegisterRoute: typeof AuthenticatedRegisterRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedResidentsRoute: typeof AuthenticatedResidentsRoute
   AuthenticatedEstablishmentIdRoute: typeof AuthenticatedEstablishmentIdRoute
   AuthenticatedPersonIdRoute: typeof AuthenticatedPersonIdRoute
@@ -282,6 +302,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDuplicatesRoute: AuthenticatedDuplicatesRoute,
   AuthenticatedEstablishmentsRoute: AuthenticatedEstablishmentsRoute,
   AuthenticatedRegisterRoute: AuthenticatedRegisterRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedResidentsRoute: AuthenticatedResidentsRoute,
   AuthenticatedEstablishmentIdRoute: AuthenticatedEstablishmentIdRoute,
   AuthenticatedPersonIdRoute: AuthenticatedPersonIdRoute,
