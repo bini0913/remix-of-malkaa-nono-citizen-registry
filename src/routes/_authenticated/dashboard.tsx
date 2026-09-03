@@ -34,6 +34,7 @@ import {
   TIER_LABEL,
 } from "@/lib/registry";
 import { AlertTriangle, IdCard, UserPlus, Users } from "lucide-react";
+import { CommandCenter } from "@/components/CommandCenter";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -50,8 +51,15 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: Dashboard,
+  component: DashboardRoute,
 });
+
+function DashboardRoute() {
+  const { data: scope, isLoading } = useScope();
+  if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (scope?.role === "subcity_admin") return <CommandCenter />;
+  return <Dashboard />;
+}
 
 const ALL = "__all__";
 const PALETTE = [
