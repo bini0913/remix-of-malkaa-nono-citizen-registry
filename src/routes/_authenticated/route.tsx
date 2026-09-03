@@ -2,7 +2,17 @@ import { createFileRoute, Outlet, redirect, Link, useNavigate } from "@tanstack/
 import { supabase } from "@/integrations/supabase/client";
 import { useHierarchy, useScope } from "@/hooks/use-scope";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, UserPlus, Users, ShieldCheck, LogOut, Copy, ScrollText } from "lucide-react";
+import {
+  LayoutDashboard,
+  UserPlus,
+  Users,
+  ShieldCheck,
+  LogOut,
+  Copy,
+  ScrollText,
+  Building2,
+  FileText,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
