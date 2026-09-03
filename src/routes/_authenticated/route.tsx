@@ -68,7 +68,7 @@ function AuthenticatedLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-sidebar-border bg-sidebar text-sidebar-foreground">
+      <header className="border-b border-sidebar-border bg-sidebar text-sidebar-foreground print:hidden">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-3">
           <div className="mr-auto">
             <p className="text-sm font-semibold tracking-tight">Malkaa Nono Subcity Resident Registry</p>
@@ -94,7 +94,7 @@ function AuthenticatedLayout() {
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-8">
+      <main className="mx-auto max-w-7xl px-4 py-8 print:max-w-none print:p-0">
         <Outlet />
       </main>
     </div>
