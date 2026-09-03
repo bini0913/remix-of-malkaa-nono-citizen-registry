@@ -41,3 +41,10 @@ EXCLUDED by user: #10 nationality country, #14 reports/exports, #7 RLS architect
 - Registration numbers: single global sequence, format MN-<year>-<6 digits>; backfill setval = count+1.
 - Guardian stubs deprecated for new registrations (parent gets full record); keep is_stub column + admin stub-upgrade for legacy rows.
 - Legacy minors without guardian: trigger enforces on INSERT only (+ guardian clearing), so existing rows stay valid/editable by admins.
+
+## Phase 5 — Completed this pass
+- [x] Nav: Establishments (admins), Official reports (subcity), role-aware labels, `print:hidden` chrome.
+- [x] Accounts page on listStaffAccounts/setAccountActive: name, email, role, woreda, zone, status, created, last sign-in; enable/disable with confirmation + toasts.
+- [x] Subcity command centre on registry_overview() (server aggregation) with resident + establishment KPIs, charts, woreda comparison.
+- [x] /reports Official Report Center: 9 report types, filters, preview, A4 print CSS with official header/footer/signature block.
+- [ ] Authenticated end-to-end role testing — blocked: database has no woredas/zones/accounts and no preview session.

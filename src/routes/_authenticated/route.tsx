@@ -2,7 +2,17 @@ import { createFileRoute, Outlet, redirect, Link, useNavigate } from "@tanstack/
 import { supabase } from "@/integrations/supabase/client";
 import { useHierarchy, useScope } from "@/hooks/use-scope";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, UserPlus, Users, ShieldCheck, LogOut, Copy, ScrollText } from "lucide-react";
+import {
+  LayoutDashboard,
+  UserPlus,
+  Users,
+  ShieldCheck,
+  LogOut,
+  Copy,
+  ScrollText,
+  Building2,
+  FileText,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -38,24 +48,27 @@ function AuthenticatedLayout() {
   };
 
   const isAdmin = scope?.role === "subcity_admin" || scope?.role === "woreda_admin";
+  const isSubcity = scope?.role === "subcity_admin";
 
   const nav = [
-    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/dashboard", label: isSubcity ? "Command centre" : "Dashboard", icon: LayoutDashboard },
     ...(scope?.role === "zone_account" ? [{ to: "/register", label: "Register resident", icon: UserPlus }] : []),
     { to: "/residents", label: "Residents", icon: Users },
     ...(isAdmin
       ? [
+          { to: "/establishments", label: "Establishments", icon: Building2 },
           { to: "/duplicates", label: "Duplicates", icon: Copy },
           { to: "/audit", label: "Audit trail", icon: ScrollText },
           { to: "/accounts", label: "Accounts", icon: ShieldCheck },
         ]
       : []),
+    ...(isSubcity ? [{ to: "/reports", label: "Official reports", icon: FileText }] : []),
   ] as const;
 
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-sidebar-border bg-sidebar text-sidebar-foreground">
+      <header className="border-b border-sidebar-border bg-sidebar text-sidebar-foreground print:hidden">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-3">
           <div className="mr-auto">
             <p className="text-sm font-semibold tracking-tight">Malkaa Nono Subcity Resident Registry</p>
@@ -81,7 +94,7 @@ function AuthenticatedLayout() {
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-8">
+      <main className="mx-auto max-w-7xl px-4 py-8 print:max-w-none print:p-0">
         <Outlet />
       </main>
     </div>
