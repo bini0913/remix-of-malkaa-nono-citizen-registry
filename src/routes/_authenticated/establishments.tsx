@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Building2, ShieldAlert } from "lucide-react";
+import { useT } from "@/lib/i18n";
 import {
   CATEGORY_LABEL,
   ESTABLISHMENT_CATEGORIES,
@@ -43,6 +44,7 @@ const ALL = "__all__";
 const NONE = "__none__";
 
 function Establishments() {
+  const t = useT();
   const { data: scope } = useScope();
   const { data: hierarchy } = useHierarchy();
   const queryClient = useQueryClient();
@@ -124,7 +126,7 @@ function Establishments() {
     e.preventDefault();
     const woreda_id = formWoreda;
     if (!woreda_id) {
-      toast.error("Select a woreda");
+      toast.error(t("est.selectWoredaError"));
       return;
     }
     setBusy(true);
@@ -149,13 +151,13 @@ function Establishments() {
         created_by: scope?.userId ?? null,
       } as never);
       if (error) throw error;
-      toast.success("Establishment registered");
+      toast.success(t("est.registered"));
       setOpen(false);
       setForm({ ...form, name: "", owner_name: "", manager_name: "", primary_phone: "", secondary_phone: "", email: "", address_detail: "", license_number: "", tin_number: "", employee_count: "", established_date: "", notes: "" });
       queryClient.invalidateQueries({ queryKey: ["establishments"] });
       queryClient.invalidateQueries({ queryKey: ["registry-overview"] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not register the establishment");
+      toast.error(err instanceof Error ? err.message : t("est.registerFailed"));
     } finally {
       setBusy(false);
     }
@@ -167,12 +169,9 @@ function Establishments() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ShieldAlert className="size-5 text-destructive" />
-            Establishments are managed by administrators
+            {t("est.adminOnlyTitle")}
           </CardTitle>
-          <CardDescription>
-            Zone registrars register residents only. Establishment records are maintained by the woreda administrator of
-            each woreda. This restriction is enforced in the database as well as in this interface.
-          </CardDescription>
+          <CardDescription>{t("est.adminOnlyBody")}</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -194,28 +193,28 @@ function Establishments() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Establishment registry</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t("est.pageTitle")}</h1>
           <p className="text-sm text-muted-foreground">
             {isSubcity
-              ? "All establishments across Malkaa Nono Subcity."
-              : `Establishments inside ${nameOf(woredas, lockedWoreda)} Woreda only.`}
+              ? t("est.subtitleSubcity")
+              : t("est.subtitleWoreda", { woreda: nameOf(woredas, lockedWoreda) })}
           </p>
         </div>
         <Button onClick={() => setOpen((v) => !v)}>
           <Building2 className="size-4" />
-          {open ? "Close form" : "Register establishment"}
+          {open ? t("est.closeForm") : t("est.registerBtn")}
         </Button>
       </header>
 
       {open && (
         <Card>
           <CardHeader>
-            <CardTitle>New establishment</CardTitle>
-            <CardDescription>A permanent registry number is issued automatically.</CardDescription>
+            <CardTitle>{t("est.newTitle")}</CardTitle>
+            <CardDescription>{t("est.newHint")}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={submit} className="grid gap-4 md:grid-cols-3">
-              {field("Establishment name", "name")}
+              {field(t("est.name"), "name")}
               <div className="space-y-2">
                 <Label>Category</Label>
                 <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
@@ -225,14 +224,14 @@ function Establishments() {
                   <SelectContent>
                     {ESTABLISHMENT_CATEGORIES.map((c) => (
                       <SelectItem key={c.value} value={c.value}>
-                        {c.label}
+                        {t(`est.cat.${c.value}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Operating status</Label>
+                <Label>{t("est.operatingStatus")}</Label>
                 <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -240,18 +239,18 @@ function Establishments() {
                   <SelectContent>
                     {ESTABLISHMENT_STATUSES.map((s) => (
                       <SelectItem key={s} value={s}>
-                        {EST_STATUS_LABEL[s]}
+                        {t(`est.status.${s}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Woreda</Label>
+                <Label>{t("est.woreda")}</Label>
                 {isSubcity ? (
                   <Select value={form.woreda_id} onValueChange={(v) => setForm({ ...form, woreda_id: v, zone_id: NONE })}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select woreda" />
+                      <SelectValue placeholder={t("est.selectWoreda")} />
                     </SelectTrigger>
                     <SelectContent>
                       {woredas.map((w) => (
@@ -266,13 +265,13 @@ function Establishments() {
                 )}
               </div>
               <div className="space-y-2">
-                <Label>Zone (optional)</Label>
+                <Label>{t("est.zoneOptional")}</Label>
                 <Select value={form.zone_id} onValueChange={(v) => setForm({ ...form, zone_id: v })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select zone" />
+                    <SelectValue placeholder={t("est.selectZone")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NONE}>Not specified</SelectItem>
+                    <SelectItem value={NONE}>{t("est.notSpecified")}</SelectItem>
                     {formZones.map((z) => (
                       <SelectItem key={z.id} value={z.id}>
                         {z.name}
@@ -281,29 +280,29 @@ function Establishments() {
                   </SelectContent>
                 </Select>
               </div>
-              {field("Owner name", "owner_name")}
-              {field("Manager name", "manager_name")}
-              {field("Primary phone", "primary_phone")}
-              {field("Secondary phone", "secondary_phone")}
-              {field("Email", "email", "email")}
-              {field("Licence number", "license_number")}
-              {field("TIN number", "tin_number")}
-              {field("Employees", "employee_count", "number")}
-              {field("Established date", "established_date", "date")}
+              {field(t("est.ownerName"), "owner_name")}
+              {field(t("est.managerName"), "manager_name")}
+              {field(t("est.primaryPhone"), "primary_phone")}
+              {field(t("est.secondaryPhone"), "secondary_phone")}
+              {field(t("est.email"), "email", "email")}
+              {field(t("est.licenseNumber"), "license_number")}
+              {field(t("est.tinNumber"), "tin_number")}
+              {field(t("est.employees"), "employee_count", "number")}
+              {field(t("est.establishedDate"), "established_date", "date")}
               <div className="space-y-2 md:col-span-2">
-                <Label>Address detail</Label>
+                <Label>{t("est.addressDetail")}</Label>
                 <Input
                   value={form.address_detail}
                   onChange={(e) => setForm({ ...form, address_detail: e.target.value })}
                 />
               </div>
               <div className="space-y-2 md:col-span-3">
-                <Label>Notes</Label>
+                <Label>{t("est.notes")}</Label>
                 <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
               <div className="md:col-span-3">
                 <Button type="submit" disabled={busy}>
-                  {busy ? "Saving…" : "Register establishment"}
+                  {busy ? t("est.saving") : t("est.registerBtn")}
                 </Button>
               </div>
             </form>
@@ -313,44 +312,44 @@ function Establishments() {
 
       <Card>
         <CardHeader className="gap-4">
-          <CardTitle>{filtered.length} establishments</CardTitle>
+          <CardTitle>{t("est.count", { count: filtered.length })}</CardTitle>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            <Input placeholder="Search name, reg. no, owner, phone…" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input placeholder={t("est.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} />
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger>
-                <SelectValue placeholder="Category" />
+                <SelectValue placeholder={t("est.filterCategory")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>All categories</SelectItem>
+                <SelectItem value={ALL}>{t("est.allCategories")}</SelectItem>
                 {ESTABLISHMENT_CATEGORIES.map((c) => (
                   <SelectItem key={c.value} value={c.value}>
-                    {c.label}
+                    {t(`est.cat.${c.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger>
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t("est.filterStatus")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>All statuses</SelectItem>
+                <SelectItem value={ALL}>{t("est.allStatuses")}</SelectItem>
                 {ESTABLISHMENT_STATUSES.map((s) => (
                   <SelectItem key={s} value={s}>
-                    {EST_STATUS_LABEL[s]}
+                    {t(`est.status.${s}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={verification} onValueChange={setVerification}>
               <SelectTrigger>
-                <SelectValue placeholder="Verification" />
+                <SelectValue placeholder={t("est.filterVerification")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>All verification</SelectItem>
+                <SelectItem value={ALL}>{t("est.allVerification")}</SelectItem>
                 {VERIFICATION_STATUSES.map((s) => (
                   <SelectItem key={s} value={s}>
-                    {VERIFICATION_LABEL[s]}
+                    {t(`verification.${s}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -358,10 +357,10 @@ function Establishments() {
             {isSubcity && (
               <Select value={woredaFilter} onValueChange={setWoredaFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Woreda" />
+                  <SelectValue placeholder={t("est.filterWoreda")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL}>All woredas</SelectItem>
+                  <SelectItem value={ALL}>{t("est.allWoredas")}</SelectItem>
                   {woredas.map((w) => (
                     <SelectItem key={w.id} value={w.id}>
                       {w.name}
@@ -376,13 +375,13 @@ function Establishments() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Reg. no</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Woreda</TableHead>
-                <TableHead>Zone</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Verification</TableHead>
+                <TableHead>{t("est.regNo")}</TableHead>
+                <TableHead>{t("est.name.col")}</TableHead>
+                <TableHead>{t("est.category.col")}</TableHead>
+                <TableHead>{t("est.woreda.col")}</TableHead>
+                <TableHead>{t("est.zone.col")}</TableHead>
+                <TableHead>{t("est.status.col")}</TableHead>
+                <TableHead>{t("est.verification.col")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -394,17 +393,17 @@ function Establishments() {
                       {r.name}
                     </Link>
                   </TableCell>
-                  <TableCell>{CATEGORY_LABEL[r.category] ?? r.category}</TableCell>
+                  <TableCell>{t(`est.cat.${r.category}`) ?? r.category}</TableCell>
                   <TableCell>{nameOf(woredas, r.woreda_id)}</TableCell>
                   <TableCell>{nameOf(zones, r.zone_id)}</TableCell>
                   <TableCell>
                     <Badge variant={r.status === "active" ? "secondary" : "outline"}>
-                      {EST_STATUS_LABEL[r.status] ?? r.status}
+                      {t(`est.status.${r.status}`) ?? r.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant={r.verification_status === "verified" ? "secondary" : "outline"}>
-                      {VERIFICATION_LABEL[r.verification_status] ?? r.verification_status}
+                      {t(`verification.${r.verification_status}`) ?? r.verification_status}
                     </Badge>
                   </TableCell>
                 </TableRow>
@@ -412,7 +411,7 @@ function Establishments() {
               {filtered.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                    No establishments match the current filters.
+                    {t("est.empty")}
                   </TableCell>
                 </TableRow>
               )}

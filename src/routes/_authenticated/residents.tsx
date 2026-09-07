@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ageTier, calcAge, STATUS_LABEL, TIER_LABEL } from "@/lib/registry";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/residents")({
   head: () => ({
@@ -28,6 +29,7 @@ export const Route = createFileRoute("/_authenticated/residents")({
 });
 
 function Residents() {
+  const t = useT();
   const [search, setSearch] = useState("");
   const [includeAll, setIncludeAll] = useState(false);
   const { data: hierarchy } = useHierarchy();
@@ -59,20 +61,20 @@ function Residents() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Resident records</h1>
-        <p className="text-sm text-muted-foreground">Records are never deleted — corrections are made through edits.</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t("residents.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("residents.subtitle")}</p>
       </header>
 
       <Card>
         <CardHeader className="flex flex-wrap items-center justify-between gap-4">
-          <CardTitle>{filtered.length} records</CardTitle>
+          <CardTitle>{t("residents.count", { count: filtered.length })}</CardTitle>
           <div className="flex flex-wrap items-center gap-4">
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
               <Checkbox checked={includeAll} onCheckedChange={(v) => setIncludeAll(v === true)} />
-              Include non-active records
+              {t("residents.includeNonActive")}
             </label>
             <Input
-              placeholder="Search by name…"
+              placeholder={t("residents.searchName")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-56"
@@ -83,13 +85,13 @@ function Residents() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Age tier</TableHead>
-                <TableHead>Sex</TableHead>
-                <TableHead>Zone</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>National ID</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{t("common.name")}</TableHead>
+                <TableHead>{t("residents.ageTier")}</TableHead>
+                <TableHead>{t("common.sex")}</TableHead>
+                <TableHead>{t("common.zone")}</TableHead>
+                <TableHead>{t("common.phone")}</TableHead>
+                <TableHead>{t("residents.nationalId")}</TableHead>
+                <TableHead>{t("common.status")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -104,7 +106,7 @@ function Residents() {
                       </Link>{" "}
                       {r.is_stub && (
                         <Badge variant="outline" className="ml-1">
-                          incomplete
+                          {t("residents.incomplete")}
                         </Badge>
                       )}
                     </TableCell>
@@ -115,9 +117,9 @@ function Residents() {
                     <TableCell>{r.primary_phone ?? "—"}</TableCell>
                     <TableCell>
                       {r.has_national_id ? (
-                        <Badge variant="secondary">Has Fayda</Badge>
+                        <Badge variant="secondary">{t("residents.hasFayda")}</Badge>
                       ) : (
-                        <Badge variant="destructive">No Fayda</Badge>
+                        <Badge variant="destructive">{t("residents.noFayda")}</Badge>
                       )}
                     </TableCell>
                     <TableCell>{STATUS_LABEL[r.status] ?? r.status}</TableCell>
@@ -127,7 +129,7 @@ function Residents() {
               {filtered.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                    No records found in your scope yet.
+                    {t("residents.empty")}
                   </TableCell>
                 </TableRow>
               )}
