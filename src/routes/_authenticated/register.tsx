@@ -3,6 +3,7 @@ import { PersonForm } from "@/components/PersonForm";
 import { useScope } from "@/hooks/use-scope";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShieldAlert } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/register")({
   head: () => ({
@@ -23,32 +24,28 @@ export const Route = createFileRoute("/_authenticated/register")({
 });
 
 function RegisterPage() {
+  const t = useT();
   const { data: scope, isLoading } = useScope();
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (isLoading) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
 
   if (scope?.role !== "zone_account") {
+    const roleLabel =
+      scope?.role === "subcity_admin"
+        ? t("role.subcity_admin")
+        : scope?.role === "woreda_admin"
+          ? t("role.woreda_admin")
+          : t("register.noRole");
     return (
       <Card className="max-w-2xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ShieldAlert className="size-5 text-destructive" />
-            Registration is performed by zone accounts only
+            {t("register.blockedTitle")}
           </CardTitle>
-          <CardDescription>
-            New residents are registered house by house by the zone registrar. As a{" "}
-            {scope?.role === "subcity_admin"
-              ? "subcity administrator"
-              : scope?.role === "woreda_admin"
-                ? "woreda administrator"
-                : "user without a registration role"}
-            , you can still view, correct and report on records within your scope, but you cannot create a new resident
-            record.
-          </CardDescription>
+          <CardDescription>{t("register.blockedBody", { role: roleLabel })}</CardDescription>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          This restriction is enforced in the database as well as in this interface.
-        </CardContent>
+        <CardContent className="text-sm text-muted-foreground">{t("register.blockedNote")}</CardContent>
       </Card>
     );
   }
@@ -56,10 +53,8 @@ function RegisterPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Register a resident</h1>
-        <p className="text-sm text-muted-foreground">
-          The form adapts to the age tier computed from the date of birth. Records can be corrected later, never deleted.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t("register.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("register.subtitle")}</p>
       </header>
       <PersonForm />
     </div>
