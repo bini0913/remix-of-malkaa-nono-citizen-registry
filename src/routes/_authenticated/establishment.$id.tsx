@@ -12,13 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
-import {
-  CATEGORY_LABEL,
-  ESTABLISHMENT_CATEGORIES,
-  ESTABLISHMENT_STATUSES,
-  EST_STATUS_LABEL,
-} from "@/lib/establishments";
-import { VERIFICATION_LABEL, VERIFICATION_STATUSES } from "@/lib/registry";
+import { useT } from "@/lib/i18n";
+import { ESTABLISHMENT_CATEGORIES, ESTABLISHMENT_STATUSES } from "@/lib/establishments";
+import { VERIFICATION_STATUSES } from "@/lib/registry";
 
 export const Route = createFileRoute("/_authenticated/establishment/$id")({
   head: () => ({
@@ -43,6 +39,7 @@ const NONE = "__none__";
 type FormState = Record<string, string>;
 
 function EstablishmentDetail() {
+  const t = useT();
   const { id } = Route.useParams();
   const { data: scope } = useScope();
   const { data: hierarchy } = useHierarchy();
@@ -84,13 +81,13 @@ function EstablishmentDetail() {
     });
   }, [row]);
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (isLoading) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
   if (!row)
     return (
       <Card className="max-w-xl">
         <CardHeader>
-          <CardTitle>Record not available</CardTitle>
-          <CardDescription>This establishment does not exist or is outside your woreda scope.</CardDescription>
+          <CardTitle>{t("est.notFoundTitle")}</CardTitle>
+          <CardDescription>{t("est.notFoundBody")}</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -125,12 +122,12 @@ function EstablishmentDetail() {
         })
         .eq("id", id);
       if (error) throw error;
-      toast.success("Establishment updated");
+      toast.success(t("est.updated"));
       queryClient.invalidateQueries({ queryKey: ["establishment", id] });
       queryClient.invalidateQueries({ queryKey: ["establishments"] });
       queryClient.invalidateQueries({ queryKey: ["registry-overview"] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save the record");
+      toast.error(err instanceof Error ? err.message : t("est.saveFailed"));
     } finally {
       setBusy(false);
     }
@@ -171,7 +168,7 @@ function EstablishmentDetail() {
       <Button variant="ghost" size="sm" asChild>
         <Link to="/establishments">
           <ArrowLeft className="size-4" />
-          Back to establishments
+          {t("est.backToList")}
         </Link>
       </Button>
 
@@ -179,65 +176,63 @@ function EstablishmentDetail() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">{row.name}</h1>
           <p className="text-sm text-muted-foreground">
-            <span className="font-mono">{row.registration_no}</span> · {CATEGORY_LABEL[row.category] ?? row.category} ·{" "}
+            <span className="font-mono">{row.registration_no}</span> · {t(`est.cat.${row.category}`) ?? row.category} ·{" "}
             {woredaName} Woreda
           </p>
         </div>
         <div className="flex gap-2">
           <Badge variant={row.status === "active" ? "secondary" : "outline"}>
-            {EST_STATUS_LABEL[row.status] ?? row.status}
+            {t(`est.status.${row.status}`) ?? row.status}
           </Badge>
           <Badge variant={row.verification_status === "verified" ? "secondary" : "outline"}>
-            {VERIFICATION_LABEL[row.verification_status] ?? row.verification_status}
+            {t(`verification.${row.verification_status}`) ?? row.verification_status}
           </Badge>
         </div>
       </header>
 
       <Card>
         <CardHeader>
-          <CardTitle>Establishment record</CardTitle>
+          <CardTitle>{t("est.recordTitle")}</CardTitle>
           <CardDescription>
-            {canManage
-              ? "Records are corrected, never deleted. The registry number cannot change."
-              : "Read-only: establishment records are maintained by administrators."}
+            {canManage ? t("est.recordHintManage") : t("est.recordHintReadonly")}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-3">
-          {field("Establishment name", "name")}
+          {field(t("est.name"), "name")}
           {select(
-            "Category",
+            t("est.category"),
             "category",
-            ESTABLISHMENT_CATEGORIES.map((c) => ({ value: c.value, label: c.label })),
+            ESTABLISHMENT_CATEGORIES.map((c) => ({ value: c.value, label: t(`est.cat.${c.value}`) })),
           )}
           {select(
-            "Operating status",
+            t("est.operatingStatus"),
             "status",
-            ESTABLISHMENT_STATUSES.map((s) => ({ value: s, label: EST_STATUS_LABEL[s] ?? s })),
+            ESTABLISHMENT_STATUSES.map((s) => ({ value: s, label: t(`est.status.${s}`) ?? s })),
           )}
           <div className="space-y-2">
-            <Label>Woreda</Label>
+            <Label>{t("est.woredaLabel")}</Label>
             <Input readOnly value={woredaName} />
           </div>
-          {select("Zone", "zone_id", [
-            { value: NONE, label: "Not specified" },
+          {select(t("est.zone"), "zone_id", [
+            { value: NONE, label: t("est.notSpecified") },
             ...zones.map((z) => ({ value: z.id, label: z.name })),
           ])}
-          {field("Owner name", "owner_name")}
-          {field("Manager name", "manager_name")}
-          {field("Primary phone", "primary_phone")}
-          {field("Secondary phone", "secondary_phone")}
-          {field("Email", "email", "email")}
-          {field("Licence number", "license_number")}
-          {field("TIN number", "tin_number")}
-          {field("Employees", "employee_count", "number")}
-          {field("Established date", "established_date", "date")}
+          {field(t("est.ownerName"), "owner_name")}
+          {field(t("est.managerName"), "manager_name")}
+          {field(t("est.primaryPhone"), "primary_phone")}
+          {field(t("est.secondaryPhone"), "secondary_phone")}
+          {field(t("est.email"), "email", "email")}
+          {field(t("est.licenseNumber"), "license_number")}
+          {field(t("est.tinNumber"), "tin_number")}
+          {field(t("est.employees"), "employee_count", "number")}
+          {field(t("est.establishedDate"), "established_date", "date")}
           {select(
-            "Verification",
+            t("est.verification"),
             "verification_status",
-            VERIFICATION_STATUSES.map((v) => ({ value: v, label: VERIFICATION_LABEL[v] ?? v })),
+            VERIFICATION_STATUSES.map((v) => ({ value: v, label: t(`verification.${v}`) ?? v })),
           )}
           <div className="space-y-2 md:col-span-2">
-            <Label>Address detail</Label>
+            <Label>{t("est.addressDetail")}</Label>
             <Input
               readOnly={!canManage}
               value={form["address_detail"] ?? ""}
@@ -245,7 +240,7 @@ function EstablishmentDetail() {
             />
           </div>
           <div className="space-y-2 md:col-span-3">
-            <Label>Verification note</Label>
+            <Label>{t("est.verificationNote")}</Label>
             <Textarea
               readOnly={!canManage}
               value={form["verification_note"] ?? ""}
@@ -253,7 +248,7 @@ function EstablishmentDetail() {
             />
           </div>
           <div className="space-y-2 md:col-span-3">
-            <Label>Notes</Label>
+            <Label>{t("est.notes")}</Label>
             <Textarea
               readOnly={!canManage}
               value={form["notes"] ?? ""}
@@ -263,7 +258,7 @@ function EstablishmentDetail() {
           {canManage && (
             <div className="md:col-span-3">
               <Button onClick={save} disabled={busy}>
-                {busy ? "Saving…" : "Save changes"}
+                {busy ? t("est.saving") : t("est.saveChanges")}
               </Button>
             </div>
           )}

@@ -14,13 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "sonner";
 import { Building2, ShieldAlert } from "lucide-react";
 import { useT } from "@/lib/i18n";
-import {
-  CATEGORY_LABEL,
-  ESTABLISHMENT_CATEGORIES,
-  ESTABLISHMENT_STATUSES,
-  EST_STATUS_LABEL,
-} from "@/lib/establishments";
-import { VERIFICATION_LABEL, VERIFICATION_STATUSES } from "@/lib/registry";
+import { ESTABLISHMENT_CATEGORIES, ESTABLISHMENT_STATUSES } from "@/lib/establishments";
+import { VERIFICATION_STATUSES } from "@/lib/registry";
 
 export const Route = createFileRoute("/_authenticated/establishments")({
   head: () => ({
