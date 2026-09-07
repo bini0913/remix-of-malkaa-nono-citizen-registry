@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { formsEn, formsOm } from "./i18n-dict-forms";
 import { estEn, estOm } from "./i18n-dict-est";
+import { analyticsEn, analyticsOm } from "./i18n-dict-analytics";
 
 export type Lang = "en" | "om";
 
@@ -724,8 +725,8 @@ const coreOm: Dict = {
   "v.female": "Dubartii",
 };
 
-const en: Dict = { ...coreEn, ...formsEn, ...estEn };
-const om: Dict = { ...coreOm, ...formsOm, ...estOm };
+const en: Dict = { ...coreEn, ...formsEn, ...estEn, ...analyticsEn };
+const om: Dict = { ...coreOm, ...formsOm, ...estOm, ...analyticsOm };
 
 const DICTS: Record<Lang, Dict> = { en, om };
 

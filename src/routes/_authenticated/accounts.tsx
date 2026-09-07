@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/accounts")({
   head: () => ({
@@ -41,12 +42,6 @@ export const Route = createFileRoute("/_authenticated/accounts")({
   component: Accounts,
 });
 
-const ROLE_LABEL: Record<string, string> = {
-  subcity_admin: "Subcity Administrator",
-  woreda_admin: "Woreda Administrator",
-  zone_account: "Zone Registrar",
-};
-
 type StaffRow = {
   id: string;
   user_id: string;
@@ -62,6 +57,13 @@ type StaffRow = {
 };
 
 function Accounts() {
+  const t = useT();
+  const ROLE_LABEL: Record<string, string> = {
+    subcity_admin: t("role.subcity_admin"),
+    woreda_admin: t("role.woreda_admin"),
+    zone_account: t("role.zone_account"),
+  };
+
   const { data: scope } = useScope();
   const { data: hierarchy } = useHierarchy();
   const queryClient = useQueryClient();
@@ -95,11 +97,11 @@ function Accounts() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!effectiveWoreda) {
-      toast.error("Select a woreda");
+      toast.error(t("accounts.selectWoredaError"));
       return;
     }
     if (role === "zone_account" && !zoneId) {
-      toast.error("Select a zone");
+      toast.error(t("accounts.selectZoneError"));
       return;
     }
     setBusy(true);
@@ -114,14 +116,14 @@ function Accounts() {
           zoneId: role === "zone_account" ? zoneId : null,
         },
       });
-      toast.success(`${ROLE_LABEL[role]} account created`);
+      toast.success(t("accounts.created", { role: ROLE_LABEL[role] ?? role }));
       setEmail("");
       setFullName("");
       setPassword("");
       setZoneId("");
       queryClient.invalidateQueries({ queryKey: ["staff-accounts"] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not create the account");
+      toast.error(err instanceof Error ? err.message : t("accounts.createFailed"));
     } finally {
       setBusy(false);
     }
@@ -131,15 +133,13 @@ function Accounts() {
     setWorking(true);
     try {
       await toggleActive({ data: { roleRowId: row.id, active } });
-      toast.success(
-        active
-          ? `${row.fullName ?? row.email ?? "Account"} can sign in again`
-          : `${row.fullName ?? row.email ?? "Account"} has been disabled`,
-      );
+      const name = row.fullName ?? row.email ?? t("accounts.thisAccount");
+      const nameStr = name ?? "";
+      toast.success(active ? t("accounts.enabled", { name: nameStr }) : t("accounts.disabledToast", { name: nameStr }));
       queryClient.invalidateQueries({ queryKey: ["staff-accounts"] });
       setPending(null);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not change the account status");
+      toast.error(err instanceof Error ? err.message : t("accounts.statusFailed"));
     } finally {
       setWorking(false);
     }
@@ -161,39 +161,37 @@ function Accounts() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Staff accounts</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t("accounts.title")}</h1>
         <p className="text-sm text-muted-foreground">
-          {isSubcity
-            ? "Create and manage woreda administrator accounts. Woreda administrators create their own zone registrars."
-            : "Create and manage zone registrar accounts for zones inside your woreda."}
+          {isSubcity ? t("accounts.subtitleSubcity") : t("accounts.subtitleWoreda")}
         </p>
       </header>
 
       <Card>
         <CardHeader>
-          <CardTitle>New {ROLE_LABEL[role]} account</CardTitle>
-          <CardDescription>The account signs in with this email and password.</CardDescription>
+          <CardTitle>{t("accounts.newTitle", { role: ROLE_LABEL[role] ?? role })}</CardTitle>
+          <CardDescription>{t("accounts.newHint")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Full name</Label>
+              <Label htmlFor="name">{t("auth.fullName")}</Label>
               <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="mail">Email</Label>
+              <Label htmlFor="mail">{t("auth.email")}</Label>
               <Input id="mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="pw">Temporary password</Label>
+              <Label htmlFor="pw">{t("accounts.tempPassword")}</Label>
               <Input id="pw" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label>Woreda</Label>
+              <Label>{t("common.woreda")}</Label>
               {isSubcity ? (
                 <Select value={woredaId} onValueChange={setWoredaId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select woreda" />
+                    <SelectValue placeholder={t("accounts.selectWoreda")} />
                   </SelectTrigger>
                   <SelectContent>
                     {(hierarchy?.woredas ?? []).map((w) => (
@@ -209,10 +207,10 @@ function Accounts() {
             </div>
             {role === "zone_account" && (
               <div className="space-y-2">
-                <Label>Zone</Label>
+                <Label>{t("common.zone")}</Label>
                 <Select value={zoneId} onValueChange={setZoneId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select zone" />
+                    <SelectValue placeholder={t("accounts.selectZone")} />
                   </SelectTrigger>
                   <SelectContent>
                     {zoneOptions.map((z) => (
@@ -226,7 +224,7 @@ function Accounts() {
             )}
             <div className="flex items-end md:col-span-2">
               <Button type="submit" disabled={busy}>
-                {busy ? "Creating…" : "Create account"}
+                {busy ? t("accounts.creating") : t("accounts.create")}
               </Button>
             </div>
           </form>
@@ -235,38 +233,36 @@ function Accounts() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Existing accounts in your scope</CardTitle>
-          <CardDescription>
-            Accounts are never deleted — disabling blocks sign-in while keeping the audit history intact.
-          </CardDescription>
+          <CardTitle>{t("accounts.existing")}</CardTitle>
+          <CardDescription>{t("accounts.existingHint")}</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           {error ? (
             <p className="text-sm text-destructive">
-              {error instanceof Error ? error.message : "Could not load staff accounts."}
+              {error instanceof Error ? error.message : t("accounts.loadFailed")}
             </p>
           ) : isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading staff directory…</p>
+            <p className="text-sm text-muted-foreground">{t("accounts.loading")}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Woreda</TableHead>
-                  <TableHead>Zone</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Last sign-in</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead>{t("common.name")}</TableHead>
+                  <TableHead>{t("auth.email")}</TableHead>
+                  <TableHead>{t("accounts.role")}</TableHead>
+                  <TableHead>{t("common.woreda")}</TableHead>
+                  <TableHead>{t("common.zone")}</TableHead>
+                  <TableHead>{t("common.status")}</TableHead>
+                  <TableHead>{t("accounts.createdOn")}</TableHead>
+                  <TableHead>{t("accounts.lastSignIn")}</TableHead>
+                  <TableHead className="text-right">{t("common.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(staff ?? []).length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-sm text-muted-foreground">
-                      No accounts in your scope yet.
+                      {t("accounts.empty")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -279,22 +275,22 @@ function Accounts() {
                     <TableCell>{nameOf(s.zone_id, "zone")}</TableCell>
                     <TableCell>
                       <Badge variant={s.is_active ? "default" : "destructive"}>
-                        {s.is_active ? "Active" : "Disabled"}
+                        {s.is_active ? t("accounts.active") : t("accounts.disabled")}
                       </Badge>
                     </TableCell>
                     <TableCell>{new Date(s.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      {s.lastSignInAt ? new Date(s.lastSignInAt).toLocaleString() : "Never signed in"}
+                      {s.lastSignInAt ? new Date(s.lastSignInAt).toLocaleString() : t("accounts.never")}
                     </TableCell>
                     <TableCell className="text-right">
                       {canManage(s) ? (
                         s.is_active ? (
                           <Button size="sm" variant="destructive" onClick={() => setPending(s)}>
-                            Disable
+                            {t("accounts.disable")}
                           </Button>
                         ) : (
                           <Button size="sm" variant="outline" disabled={working} onClick={() => applyStatus(s, true)}>
-                            Enable
+                            {t("accounts.enable")}
                           </Button>
                         )
                       ) : (
@@ -312,14 +308,13 @@ function Accounts() {
       <AlertDialog open={!!pending} onOpenChange={(o) => !o && setPending(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Disable this account?</AlertDialogTitle>
+            <AlertDialogTitle>{t("accounts.confirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {pending?.fullName ?? pending?.email ?? "This account"} will immediately lose access to the registry.
-              Their records and audit history stay intact and you can enable the account again at any time.
+              {t("accounts.confirmBody", { name: pending?.fullName ?? pending?.email ?? t("accounts.thisAccount") ?? "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={working}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={working}>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               disabled={working}
               onClick={(e) => {
@@ -327,7 +322,7 @@ function Accounts() {
                 if (pending) void applyStatus(pending, false);
               }}
             >
-              {working ? "Disabling…" : "Disable account"}
+              {working ? t("accounts.disabling") : t("accounts.disable")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

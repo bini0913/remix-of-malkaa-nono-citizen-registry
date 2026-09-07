@@ -35,6 +35,7 @@ import {
 } from "@/lib/registry";
 import { AlertTriangle, IdCard, UserPlus, Users } from "lucide-react";
 import { CommandCenter } from "@/components/CommandCenter";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -56,7 +57,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function DashboardRoute() {
   const { data: scope, isLoading } = useScope();
-  if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  const t = useT();
+  if (isLoading) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
   if (scope?.role === "subcity_admin") return <CommandCenter />;
   return <Dashboard />;
 }
@@ -95,10 +97,10 @@ type Row = {
   is_stub: boolean;
 };
 
-function tally(rows: Row[], pick: (r: Row) => string | null) {
+function tally(rows: Row[], pick: (r: Row) => string | null, notRecordedLabel: string) {
   const map = new Map<string, number>();
   for (const r of rows) {
-    const key = pick(r) || "Not recorded";
+    const key = pick(r) || notRecordedLabel;
     map.set(key, (map.get(key) ?? 0) + 1);
   }
   return [...map.entries()].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
@@ -113,6 +115,7 @@ function ChartCard({
   data: { name: string; value: number }[];
   kind: "pie" | "bar";
 }) {
+  const t = useT();
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -120,7 +123,7 @@ function ChartCard({
       </CardHeader>
       <CardContent className="h-72">
         {data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No data for the current filters.</p>
+          <p className="text-sm text-muted-foreground">{t("common.noDataFilters")}</p>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             {kind === "pie" ? (
@@ -150,6 +153,7 @@ function ChartCard({
 }
 
 function Dashboard() {
+  const t = useT();
   const { data: scope } = useScope();
   const { data: hierarchy } = useHierarchy();
 
@@ -191,8 +195,8 @@ function Dashboard() {
   const zones = hierarchy?.zones ?? [];
   const woredas = hierarchy?.woredas ?? [];
   const zoneOf = (id: string) => zones.find((z) => z.id === id);
-  const zoneName = (id: string) => zoneOf(id)?.name ?? "Unknown zone";
-  const woredaName = (id: string) => woredas.find((w) => w.id === id)?.name ?? "Unknown woreda";
+  const zoneName = (id: string) => zoneOf(id)?.name ?? t("dash.unknownZone");
+  const woredaName = (id: string) => woredas.find((w) => w.id === id)?.name ?? t("dash.unknownWoreda");
 
   const zoneOptions = effectiveWoreda === ALL ? zones : zones.filter((z) => z.woreda_id === effectiveWoreda);
 
@@ -263,10 +267,10 @@ function Dashboard() {
   }, [filtered, zones, woredas]);
 
   const cards = [
-    { label: "Residents in view", value: filtered.length, icon: Users },
-    { label: "With National ID", value: `${withId} (${filtered.length ? Math.round((withId / filtered.length) * 100) : 0}%)`, icon: IdCard },
-    { label: "Households (heads)", value: households, icon: Users },
-    { label: "Pending duplicates", value: pendingDupes ?? 0, icon: AlertTriangle },
+    { label: t("dash.kpi.inView"), value: filtered.length, icon: Users },
+    { label: t("dash.kpi.withId"), value: `${withId} (${filtered.length ? Math.round((withId / filtered.length) * 100) : 0}%)`, icon: IdCard },
+    { label: t("dash.kpi.households"), value: households, icon: Users },
+    { label: t("dash.kpi.pendingDupes"), value: pendingDupes ?? 0, icon: AlertTriangle },
   ];
 
   const filterSelect = (
@@ -282,7 +286,7 @@ function Dashboard() {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={ALL}>All</SelectItem>
+          <SelectItem value={ALL}>{t("common.all")}</SelectItem>
           {options.map((o) => (
             <SelectItem key={o.value} value={o.value}>
               {o.label}
@@ -311,22 +315,22 @@ function Dashboard() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            {isZoneAccount ? "Zone report" : isWoredaAdmin ? "Woreda report" : "Registry reports"}
+            {isZoneAccount ? t("dash.zoneReport") : isWoredaAdmin ? t("dash.woredaReport") : t("dash.registryReports")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Malkaa Nono Subcity ·{" "}
+            {t("app.subcity")} ·{" "}
             {scope?.role === "subcity_admin"
-              ? `${woredas.length} woredas · ${zones.length} zones`
+              ? t("dash.scopeSubcity", { woredas: woredas.length, zones: zones.length })
               : isWoredaAdmin
-                ? `${woredas.find((w) => w.id === scope?.woredaId)?.name ?? "Your woreda"} Woreda only`
-                : `${zones.find((z) => z.id === scope?.zoneId)?.name ?? "Your zone"} zone only`}
+                ? t("dash.scopeWoreda", { name: woredas.find((w) => w.id === scope?.woredaId)?.name ?? t("dash.yourWoreda") })
+                : t("dash.scopeZone", { name: zones.find((z) => z.id === scope?.zoneId)?.name ?? t("dash.yourZone") })}
           </p>
         </div>
         {scope?.role === "zone_account" && (
           <Button asChild>
             <Link to="/register">
               <UserPlus className="size-4" />
-              Register resident
+              {t("dash.registerResident")}
             </Link>
           </Button>
         )}
@@ -334,53 +338,53 @@ function Dashboard() {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Filters</CardTitle>
-          <CardDescription>Everything below reflects these filters.</CardDescription>
+          <CardTitle className="text-base">{t("common.filters")}</CardTitle>
+          <CardDescription>{t("dash.filtersHint")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {scope?.role === "subcity_admin" &&
-              filterSelect("Woreda", woreda, (v) => {
+              filterSelect(t("common.woreda"), woreda, (v) => {
                 setWoreda(v);
                 setZone(ALL);
               }, woredas.map((w) => ({ value: w.id, label: w.name })))}
             {!isZoneAccount &&
-              filterSelect("Zone", zone, setZone, zoneOptions.map((z) => ({ value: z.id, label: z.name })))}
-            {filterSelect("Sex", sex, setSex, [
-              { value: "male", label: "Male" },
-              { value: "female", label: "Female" },
+              filterSelect(t("common.zone"), zone, setZone, zoneOptions.map((z) => ({ value: z.id, label: z.name })))}
+            {filterSelect(t("common.sex"), sex, setSex, [
+              { value: "male", label: t("common.male") },
+              { value: "female", label: t("common.female") },
             ])}
             {filterSelect(
-              "Nationality",
+              t("dash.nationality"),
               nationality,
               setNationality,
               NATIONALITY_OPTIONS.map((n) => ({ value: n.value, label: n.label })),
             )}
-            {filterSelect("Education", education, setEducation, EDUCATION_LEVELS.map((e) => ({ value: e, label: e })))}
+            {filterSelect(t("dash.education"), education, setEducation, EDUCATION_LEVELS.map((e) => ({ value: e, label: e })))}
             {filterSelect(
-              "Employment",
+              t("dash.employment"),
               employment,
               setEmployment,
               EMPLOYMENT_STATUSES.map((e) => ({ value: e, label: e })),
             )}
-            {filterSelect("Marital status", marital, setMarital, MARITAL_STATUSES.map((m) => ({ value: m, label: m })))}
-            {filterSelect("Religion", religion, setReligion, RELIGIONS.map((r) => ({ value: r, label: r })))}
+            {filterSelect(t("dash.marital"), marital, setMarital, MARITAL_STATUSES.map((m) => ({ value: m, label: m })))}
+            {filterSelect(t("dash.religion"), religion, setReligion, RELIGIONS.map((r) => ({ value: r, label: r })))}
             <div className="space-y-1.5">
-              <Label className="text-xs">Minimum age</Label>
+              <Label className="text-xs">{t("dash.minAge")}</Label>
               <Input type="number" min={0} value={minAge} onChange={(e) => setMinAge(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Maximum age</Label>
+              <Label className="text-xs">{t("dash.maxAge")}</Label>
               <Input type="number" min={0} value={maxAge} onChange={(e) => setMaxAge(e.target.value)} />
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-4">
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
               <Checkbox checked={includeAll} onCheckedChange={(v) => setIncludeAll(v === true)} />
-              Include deceased, relocated and duplicate records
+              {t("dash.includeAll")}
             </label>
             <Button variant="ghost" size="sm" onClick={reset}>
-              Reset filters
+              {t("common.reset")}
             </Button>
           </div>
         </CardContent>
@@ -404,35 +408,35 @@ function Dashboard() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartCard
-          title="National ID (Fayda) coverage"
+          title={t("dash.chart.faydaCoverage")}
           kind="pie"
           data={[
-            { name: "Has Fayda", value: withId },
-            { name: "No Fayda", value: filtered.length - withId },
+            { name: t("dash.hasFayda"), value: withId },
+            { name: t("dash.noFayda"), value: filtered.length - withId },
           ].filter((d) => d.value > 0)}
         />
         <ChartCard
-          title="Age tiers"
+          title={t("dash.chart.ageTiers")}
           kind="bar"
           data={tally(filtered, (r) => {
-            const t = ageTier(calcAge(r.date_of_birth));
-            return t ? TIER_LABEL[t] : null;
-          })}
+            const tier = ageTier(calcAge(r.date_of_birth));
+            return tier ? TIER_LABEL[tier] : null;
+          }, t("common.notRecorded"))}
         />
-        <ChartCard title="Sex" kind="pie" data={tally(filtered, (r) => (r.sex ? r.sex : null))} />
+        <ChartCard title={t("common.sex")} kind="pie" data={tally(filtered, (r) => (r.sex ? r.sex : null), t("common.notRecorded"))} />
         <ChartCard
-          title="Nationality status"
+          title={t("dash.chart.nationality")}
           kind="pie"
-          data={tally(filtered, (r) => r.nationality_status)}
+          data={tally(filtered, (r) => r.nationality_status, t("common.notRecorded"))}
         />
-        <ChartCard title="Education level" kind="bar" data={tally(filtered, (r) => r.education_level)} />
-        <ChartCard title="Employment status" kind="bar" data={tally(filtered, (r) => r.employment_status)} />
-        <ChartCard title="Marital status" kind="pie" data={tally(filtered, (r) => r.marital_status)} />
-        <ChartCard title="Religion" kind="pie" data={tally(filtered, (r) => r.religion)} />
-        {scope?.role === "subcity_admin" && <ChartCard title="Residents per woreda" kind="bar" data={byWoreda} />}
+        <ChartCard title={t("dash.chart.education")} kind="bar" data={tally(filtered, (r) => r.education_level, t("common.notRecorded"))} />
+        <ChartCard title={t("dash.chart.employment")} kind="bar" data={tally(filtered, (r) => r.employment_status, t("common.notRecorded"))} />
+        <ChartCard title={t("dash.chart.marital")} kind="pie" data={tally(filtered, (r) => r.marital_status, t("common.notRecorded"))} />
+        <ChartCard title={t("dash.chart.religion")} kind="pie" data={tally(filtered, (r) => r.religion, t("common.notRecorded"))} />
+        {scope?.role === "subcity_admin" && <ChartCard title={t("dash.chart.perWoreda")} kind="bar" data={byWoreda} />}
         {!isZoneAccount && (
           <ChartCard
-            title="Residents per zone"
+            title={t("dash.chart.perZone")}
             kind="bar"
             data={byZone.slice(0, 12).map((z) => ({ name: z.zone, value: z.total }))}
           />
@@ -441,22 +445,22 @@ function Dashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{isZoneAccount ? "Data completeness" : "Data completeness by zone"}</CardTitle>
+          <CardTitle>{isZoneAccount ? t("dash.completeness") : t("dash.completenessByZone")}</CardTitle>
           <CardDescription>
-            Where registration work is weakest — missing dates of birth, addresses and reachable phone numbers.
+            {t("dash.completenessHint")}
           </CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Woreda</TableHead>
-                <TableHead>Zone</TableHead>
-                <TableHead className="text-right">Residents</TableHead>
-                <TableHead className="text-right">Missing DOB</TableHead>
-                <TableHead className="text-right">Missing address</TableHead>
-                <TableHead className="text-right">Missing phone</TableHead>
-                <TableHead className="text-right">Fayda coverage</TableHead>
+                <TableHead>{t("common.woreda")}</TableHead>
+                <TableHead>{t("common.zone")}</TableHead>
+                <TableHead className="text-right">{t("common.residents")}</TableHead>
+                <TableHead className="text-right">{t("dash.missingDob")}</TableHead>
+                <TableHead className="text-right">{t("dash.missingAddress")}</TableHead>
+                <TableHead className="text-right">{t("dash.missingPhone")}</TableHead>
+                <TableHead className="text-right">{t("dash.faydaCoverage")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -476,7 +480,7 @@ function Dashboard() {
               {byZone.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                    No records match the current filters.
+                    {t("dash.noMatch")}
                   </TableCell>
                 </TableRow>
               )}
