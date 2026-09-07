@@ -20,6 +20,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TIER_LABEL, VERIFICATION_LABEL, STATUS_LABEL } from "@/lib/registry";
 import { CATEGORY_LABEL, EST_STATUS_LABEL } from "@/lib/establishments";
 import { Building2, FileText, IdCard, Users } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 const PALETTE = ["#0B6E4F", "#D4A017", "#2F6690", "#A65E2E", "#6B8E23", "#B23A48", "#3F7D58", "#8B5E3C"];
 
@@ -66,6 +67,7 @@ function ChartCard({
   data: NamedList;
   kind: "pie" | "bar";
 }) {
+  const t = useT();
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -74,7 +76,7 @@ function ChartCard({
       </CardHeader>
       <CardContent className="h-72">
         {data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No data recorded yet.</p>
+          <p className="text-sm text-muted-foreground">{t("common.noData")}</p>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             {kind === "pie" ? (
@@ -104,6 +106,7 @@ function ChartCard({
 }
 
 export function CommandCenter() {
+  const t = useT();
   const { data, isLoading, error } = useQuery({
     queryKey: ["registry-overview"],
     queryFn: async () => {
@@ -125,10 +128,10 @@ export function CommandCenter() {
   });
 
   if (error) {
-    return <p className="text-sm text-destructive">{error instanceof Error ? error.message : "Could not load data."}</p>;
+    return <p className="text-sm text-destructive">{error instanceof Error ? error.message : t("cc.loadFailed")}</p>;
   }
   if (isLoading || !data) {
-    return <p className="text-sm text-muted-foreground">Loading subcity command centre…</p>;
+    return <p className="text-sm text-muted-foreground">{t("cc.loading")}</p>;
   }
 
   const r = data.residents;
@@ -136,14 +139,14 @@ export function CommandCenter() {
   const idCoverage = r.total ? Math.round((r.with_national_id / r.total) * 100) : 0;
 
   const kpis = [
-    { label: "Total residents", value: r.total.toLocaleString(), icon: Users },
-    { label: "National ID coverage", value: `${r.with_national_id.toLocaleString()} (${idCoverage}%)`, icon: IdCard },
-    { label: "Total establishments", value: e.total.toLocaleString(), icon: Building2 },
-    { label: "Pending duplicate reviews", value: (pendingDupes ?? 0).toLocaleString(), icon: FileText },
+    { label: t("cc.kpi.totalResidents"), value: r.total.toLocaleString(), icon: Users },
+    { label: t("cc.kpi.idCoverage"), value: `${r.with_national_id.toLocaleString()} (${idCoverage}%)`, icon: IdCard },
+    { label: t("cc.kpi.totalEstablishments"), value: e.total.toLocaleString(), icon: Building2 },
+    { label: t("cc.kpi.pendingDupes"), value: (pendingDupes ?? 0).toLocaleString(), icon: FileText },
   ];
 
   const ageSeries = ["baby", "child", "youth", "adult", "elder", "unknown"].map((k) => ({
-    name: k === "unknown" ? "Unknown" : TIER_LABEL[k as keyof typeof TIER_LABEL],
+    name: k === "unknown" ? t("common.unknown") : TIER_LABEL[k as keyof typeof TIER_LABEL],
     value: r.by_age_tier?.[k] ?? 0,
   }));
 
@@ -162,22 +165,22 @@ export function CommandCenter() {
     <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Subcity command centre</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t("cc.title")}</h1>
           <p className="text-sm text-muted-foreground">
-            Malkaa Nono Subcity Administration · live resident and establishment intelligence, aggregated on the server.
+            {t("cc.subtitle")}
           </p>
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline">
             <Link to="/establishments">
               <Building2 className="size-4" />
-              Establishments
+              {t("cc.establishmentsLink")}
             </Link>
           </Button>
           <Button asChild>
             <Link to="/reports">
               <FileText className="size-4" />
-              Official reports
+              {t("cc.officialReports")}
             </Link>
           </Button>
         </div>
@@ -200,22 +203,22 @@ export function CommandCenter() {
       </div>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight">Residents</h2>
+        <h2 className="text-lg font-semibold tracking-tight">{t("cc.residentsHeading")}</h2>
         <div className="grid gap-4 lg:grid-cols-2">
-          <ChartCard title="Age categories" data={ageSeries} kind="bar" />
+          <ChartCard title={t("cc.ageCategories")} data={ageSeries} kind="bar" />
           <ChartCard
-            title="Sex"
-            data={toSeries(r.by_sex, (k) => (k === "unknown" ? "Not recorded" : k === "male" ? "Male" : "Female"))}
+            title={t("common.sex")}
+            data={toSeries(r.by_sex, (k) => (k === "unknown" ? t("common.notRecorded") : k === "male" ? t("common.male") : t("common.female")))}
             kind="pie"
           />
           <ChartCard
-            title="Registration status"
+            title={t("cc.registrationStatus")}
             data={toSeries(r.by_status, (k) => STATUS_LABEL[k] ?? k)}
-            description="Active, deceased and relocated residents."
+            description={t("cc.registrationStatusHint")}
             kind="pie"
           />
           <ChartCard
-            title="Verification status"
+            title={t("cc.verificationStatus")}
             data={toSeries(r.by_verification, (k) => VERIFICATION_LABEL[k] ?? k)}
             kind="pie"
           />
@@ -223,22 +226,22 @@ export function CommandCenter() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight">Establishments</h2>
+        <h2 className="text-lg font-semibold tracking-tight">{t("cc.establishmentsHeading")}</h2>
         <div className="grid gap-4 lg:grid-cols-2">
           <ChartCard
-            title="By category"
+            title={t("cc.byCategory")}
             data={toSeries(e.by_category, (k) => CATEGORY_LABEL[k] ?? k)}
             kind="bar"
           />
-          <ChartCard title="By woreda" data={e.by_woreda ?? []} kind="bar" />
+          <ChartCard title={t("cc.byWoreda")} data={e.by_woreda ?? []} kind="bar" />
           <ChartCard
-            title="Operating status"
+            title={t("cc.operatingStatus")}
             data={toSeries(e.by_status, (k) => EST_STATUS_LABEL[k] ?? k)}
-            description="Active, closed, relocated and suspended."
+            description={t("cc.operatingStatusHint")}
             kind="pie"
           />
           <ChartCard
-            title="Verification status"
+            title={t("cc.verificationStatus")}
             data={toSeries(e.by_verification, (k) => VERIFICATION_LABEL[k] ?? k)}
             kind="pie"
           />
@@ -247,8 +250,8 @@ export function CommandCenter() {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Woreda comparison</CardTitle>
-          <CardDescription>Residents and establishments registered per woreda.</CardDescription>
+          <CardTitle className="text-base">{t("cc.woredaComparison")}</CardTitle>
+          <CardDescription>{t("cc.woredaComparisonHint")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="h-72">
@@ -259,8 +262,8 @@ export function CommandCenter() {
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                 <Tooltip />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="residents" name="Residents" fill={PALETTE[0]} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="establishments" name="Establishments" fill={PALETTE[1]} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="residents" name={t("cc.residentsSeries")} fill={PALETTE[0]} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="establishments" name={t("cc.establishmentsSeries")} fill={PALETTE[1]} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -268,9 +271,9 @@ export function CommandCenter() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Woreda</TableHead>
-                  <TableHead className="text-right">Residents</TableHead>
-                  <TableHead className="text-right">Establishments</TableHead>
+                  <TableHead>{t("common.woreda")}</TableHead>
+                  <TableHead className="text-right">{t("common.residents")}</TableHead>
+                  <TableHead className="text-right">{t("common.establishments")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -290,15 +293,15 @@ export function CommandCenter() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Zone activity (top zones)</CardTitle>
+            <CardTitle className="text-base">{t("cc.zoneActivity")}</CardTitle>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Zone</TableHead>
-                  <TableHead>Woreda</TableHead>
-                  <TableHead className="text-right">Residents</TableHead>
+                  <TableHead>{t("common.zone")}</TableHead>
+                  <TableHead>{t("common.woreda")}</TableHead>
+                  <TableHead className="text-right">{t("common.residents")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -316,12 +319,12 @@ export function CommandCenter() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Latest registrations</CardTitle>
+            <CardTitle className="text-base">{t("cc.latest")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-sm">
             <div>
-              <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">Residents</p>
-              {(r.recent ?? []).length === 0 && <p className="text-muted-foreground">None yet.</p>}
+              <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">{t("cc.residentsHeading")}</p>
+              {(r.recent ?? []).length === 0 && <p className="text-muted-foreground">{t("cc.noneYet")}</p>}
               {(r.recent ?? []).map((x) => (
                 <p key={x.id} className="flex justify-between gap-4 border-b border-border/60 py-1">
                   <span>
@@ -332,8 +335,8 @@ export function CommandCenter() {
               ))}
             </div>
             <div>
-              <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">Establishments</p>
-              {(e.recent ?? []).length === 0 && <p className="text-muted-foreground">None yet.</p>}
+              <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">{t("cc.establishmentsHeading")}</p>
+              {(e.recent ?? []).length === 0 && <p className="text-muted-foreground">{t("cc.noneYet")}</p>}
               {(e.recent ?? []).map((x) => (
                 <p key={x.id} className="flex justify-between gap-4 border-b border-border/60 py-1">
                   <span>
