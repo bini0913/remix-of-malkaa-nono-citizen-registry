@@ -6,6 +6,7 @@ import { useHierarchy, useScope } from "@/hooks/use-scope";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/audit")({
   head: () => ({
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/_authenticated/audit")({
 });
 
 function AuditPage() {
+  const t = useT();
   const { data: scope } = useScope();
   const { data: hierarchy } = useHierarchy();
   const [search, setSearch] = useState("");
@@ -50,8 +52,8 @@ function AuditPage() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Administrator access only</CardTitle>
-          <CardDescription>The audit trail is available to woreda and subcity administrators.</CardDescription>
+          <CardTitle>{t("common.adminOnly")}</CardTitle>
+          <CardDescription>{t("audit.adminOnlyBody")}</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -68,18 +70,16 @@ function AuditPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Audit trail</h1>
-        <p className="text-sm text-muted-foreground">
-          Every creation and correction in your scope, newest first. Entries can never be edited or removed.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t("audit.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("audit.subtitle")}</p>
       </header>
 
       <Card>
         <CardHeader className="flex flex-wrap items-center justify-between gap-4">
-          <CardTitle>{filtered.length} entries</CardTitle>
+          <CardTitle>{t("audit.count", { count: filtered.length })}</CardTitle>
           <Input
             className="w-64"
-            placeholder="Search name, field or value…"
+            placeholder={t("audit.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -88,14 +88,14 @@ function AuditPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>When</TableHead>
-                <TableHead>Resident</TableHead>
-                <TableHead>Zone</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Field</TableHead>
-                <TableHead>From</TableHead>
-                <TableHead>To</TableHead>
-                <TableHead>Role</TableHead>
+                <TableHead>{t("audit.when")}</TableHead>
+                <TableHead>{t("audit.resident")}</TableHead>
+                <TableHead>{t("common.zone")}</TableHead>
+                <TableHead>{t("audit.action")}</TableHead>
+                <TableHead>{t("audit.field")}</TableHead>
+                <TableHead>{t("audit.from")}</TableHead>
+                <TableHead>{t("audit.to")}</TableHead>
+                <TableHead>{t("accounts.role")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -127,7 +127,7 @@ function AuditPage() {
               {!isLoading && filtered.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
-                    No audit entries found.
+                    {t("audit.empty")}
                   </TableCell>
                 </TableRow>
               )}
