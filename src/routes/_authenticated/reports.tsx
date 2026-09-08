@@ -13,6 +13,7 @@ import { ESTABLISHMENT_CATEGORIES, ESTABLISHMENT_STATUSES, EST_STATUS_LABEL } fr
 import { STATUS_LABEL, VERIFICATION_LABEL, VERIFICATION_STATUSES, VITAL_STATUSES } from "@/lib/registry";
 import { FileText, Printer, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
@@ -38,6 +39,7 @@ export const Route = createFileRoute("/_authenticated/reports")({
 const ALL = "__all__";
 
 function ReportCenter() {
+  const t = useT();
   const { data: scope } = useScope();
   const { data: hierarchy } = useHierarchy();
   const execute = useServerFn(runReport);
@@ -80,20 +82,32 @@ function ReportCenter() {
     onSuccess: (data) => {
       setResult(data);
       const lines: string[] = [];
-      lines.push(`Woreda: ${woreda === ALL ? "All woredas" : woredaName(woreda)}`);
-      lines.push(`Zone: ${zone === ALL ? "All zones" : zoneName(zone)}`);
+      lines.push(t("reports.line.woreda", { value: woreda === ALL ? t("reports.allWoredas") : woredaName(woreda) }));
+      lines.push(t("reports.line.zone", { value: zone === ALL ? t("reports.allZones") : zoneName(zone) }));
       if (isEstScope || meta.scope === "both")
         lines.push(
-          `Category: ${category === ALL ? "All categories" : (ESTABLISHMENT_CATEGORIES.find((c) => c.value === category)?.label ?? category)}`,
+          t("reports.line.category", {
+            value:
+              category === ALL
+                ? t("reports.allCategories")
+                : t(`v.${ESTABLISHMENT_CATEGORIES.find((c) => c.value === category)?.label ?? category}`),
+          }),
         );
-      lines.push(`Status: ${status === ALL ? "All statuses" : (statusOptions.find((s) => s.value === status)?.label ?? status)}`);
       lines.push(
-        `Verification: ${verification === ALL ? "All verification states" : (VERIFICATION_LABEL[verification] ?? verification)}`,
+        t("reports.line.status", {
+          value: status === ALL ? t("reports.allStatuses") : t(`v.${statusOptions.find((s) => s.value === status)?.label ?? status}`),
+        }),
       );
-      setSnapshot({ label: meta.label, scopeLines: lines });
-      if (data.truncated) toast.warning("Result truncated to the first 5,000 records — narrow the filters.");
+      lines.push(
+        t("reports.line.verification", {
+          value:
+            verification === ALL ? t("reports.allVerification") : t(`v.${VERIFICATION_LABEL[verification] ?? verification}`),
+        }),
+      );
+      setSnapshot({ label: t(`v.${meta.label}`), scopeLines: lines });
+      if (data.truncated) toast.warning(t("reports.truncatedToast"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not generate the report"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("reports.failed")),
   });
 
   if (scope && scope.role !== "subcity_admin") {
@@ -102,11 +116,9 @@ function ReportCenter() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ShieldAlert className="size-5 text-destructive" />
-            Restricted
+            {t("reports.restricted")}
           </CardTitle>
-          <CardDescription>
-            The Official Report Center is available to the Subcity Administration only.
-          </CardDescription>
+          <CardDescription>{t("reports.restrictedBody")}</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -114,8 +126,8 @@ function ReportCenter() {
 
   const periodText =
     dateFrom || dateTo
-      ? `${dateFrom ? new Date(dateFrom).toLocaleDateString() : "Start of registry"} — ${dateTo ? new Date(dateTo).toLocaleDateString() : "Today"}`
-      : "All records to date";
+      ? `${dateFrom ? new Date(dateFrom).toLocaleDateString() : t("reports.periodStart")} — ${dateTo ? new Date(dateTo).toLocaleDateString() : t("reports.periodToday")}`
+      : t("reports.periodAll");
 
   return (
     <div className="space-y-6">
@@ -123,27 +135,25 @@ function ReportCenter() {
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-foreground">
             <FileText className="size-6" />
-            Official Report Center
+            {t("reports.title")}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Malkaa Nono Subcity Administration · generate, preview and print official administrative reports.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("reports.subtitle")}</p>
         </div>
         <Button variant="outline" disabled={!result} onClick={() => window.print()}>
           <Printer className="size-4" />
-          Print / save as PDF
+          {t("reports.printPdf")}
         </Button>
       </header>
 
       <Card className="no-print">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Report definition</CardTitle>
-          <CardDescription>Choose a report type and narrow the scope before generating.</CardDescription>
+          <CardTitle className="text-base">{t("reports.definition")}</CardTitle>
+          <CardDescription>{t("reports.definitionHint")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-4">
             <div className="space-y-1.5">
-              <Label className="text-xs">Report type</Label>
+              <Label className="text-xs">{t("reports.type")}</Label>
               <Select value={type} onValueChange={(v) => setType(v as ReportFilters["type"])}>
                 <SelectTrigger>
                   <SelectValue />
@@ -151,22 +161,22 @@ function ReportCenter() {
                 <SelectContent>
                   {REPORT_TYPES.map((r) => (
                     <SelectItem key={r.value} value={r.value}>
-                      {r.label}
+                      {t(`v.${r.label}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">From (registration date)</Label>
+              <Label className="text-xs">{t("reports.from")}</Label>
               <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">To</Label>
+              <Label className="text-xs">{t("reports.to")}</Label>
               <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Woreda</Label>
+              <Label className="text-xs">{t("common.woreda")}</Label>
               <Select
                 value={woreda}
                 onValueChange={(v) => {
@@ -178,7 +188,7 @@ function ReportCenter() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL}>All woredas</SelectItem>
+                  <SelectItem value={ALL}>{t("reports.allWoredas")}</SelectItem>
                   {(hierarchy?.woredas ?? []).map((w) => (
                     <SelectItem key={w.id} value={w.id}>
                       {w.name}
@@ -188,13 +198,13 @@ function ReportCenter() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Zone</Label>
+              <Label className="text-xs">{t("common.zone")}</Label>
               <Select value={zone} onValueChange={setZone}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL}>All zones</SelectItem>
+                  <SelectItem value={ALL}>{t("reports.allZones")}</SelectItem>
                   {zones.map((z) => (
                     <SelectItem key={z.id} value={z.id}>
                       {z.name}
@@ -204,48 +214,48 @@ function ReportCenter() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Establishment category</Label>
+              <Label className="text-xs">{t("reports.category")}</Label>
               <Select value={category} onValueChange={setCategory} disabled={meta.scope === "residents"}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL}>All categories</SelectItem>
+                  <SelectItem value={ALL}>{t("reports.allCategories")}</SelectItem>
                   {ESTABLISHMENT_CATEGORIES.map((c) => (
                     <SelectItem key={c.value} value={c.value}>
-                      {c.label}
+                      {t(`v.${c.label}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Status</Label>
+              <Label className="text-xs">{t("common.status")}</Label>
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL}>All statuses</SelectItem>
+                  <SelectItem value={ALL}>{t("reports.allStatuses")}</SelectItem>
                   {statusOptions.map((s) => (
                     <SelectItem key={s.value} value={s.value}>
-                      {s.label}
+                      {t(`v.${s.label}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Verification status</Label>
+              <Label className="text-xs">{t("reports.verification")}</Label>
               <Select value={verification} onValueChange={setVerification}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={ALL}>All verification states</SelectItem>
+                  <SelectItem value={ALL}>{t("reports.allVerification")}</SelectItem>
                   {VERIFICATION_STATUSES.map((v) => (
                     <SelectItem key={v} value={v}>
-                      {VERIFICATION_LABEL[v]}
+                      {t(`v.${VERIFICATION_LABEL[v]}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -254,7 +264,7 @@ function ReportCenter() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-              {mutation.isPending ? "Generating…" : "Generate preview"}
+              {mutation.isPending ? t("reports.generating") : t("reports.generate")}
             </Button>
             <Button
               variant="ghost"
@@ -268,7 +278,7 @@ function ReportCenter() {
                 setVerification(ALL);
               }}
             >
-              Reset filters
+              {t("common.reset")}
             </Button>
           </div>
         </CardContent>
@@ -277,8 +287,8 @@ function ReportCenter() {
       {result && snapshot && (
         <section className="print-sheet mx-auto w-full max-w-[210mm] rounded-md border border-border bg-card p-8 text-card-foreground shadow-sm">
           <div className="print-header border-b-2 border-foreground pb-4 text-center">
-            <h2 className="text-lg font-bold uppercase tracking-[0.2em]">Malkaa Nono Subcity Administration</h2>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em]">Official Administrative Report</p>
+            <h2 className="text-lg font-bold uppercase tracking-[0.2em]">{t("reports.headerOrg")}</h2>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em]">{t("reports.headerDoc")}</p>
           </div>
 
           <div className="mt-5 text-center">
@@ -287,26 +297,26 @@ function ReportCenter() {
 
           <dl className="mt-4 grid grid-cols-2 gap-x-8 gap-y-1 border-y border-border py-3 text-xs">
             <div className="flex gap-2">
-              <dt className="font-semibold">Generated:</dt>
+              <dt className="font-semibold">{t("reports.generatedAt")}</dt>
               <dd>{new Date(result.generatedAt).toLocaleString()}</dd>
             </div>
             <div className="flex gap-2">
-              <dt className="font-semibold">Reporting period:</dt>
+              <dt className="font-semibold">{t("reports.period")}</dt>
               <dd>{periodText}</dd>
             </div>
             <div className="flex gap-2">
-              <dt className="font-semibold">Generated by:</dt>
+              <dt className="font-semibold">{t("reports.generatedBy")}</dt>
               <dd>{result.generatedBy}</dd>
             </div>
             <div className="flex gap-2">
-              <dt className="font-semibold">Records:</dt>
+              <dt className="font-semibold">{t("reports.records")}</dt>
               <dd>
                 {result.rowCount.toLocaleString()}
-                {result.truncated ? " (truncated at 5,000)" : ""}
+                {result.truncated ? t("reports.truncatedAt") : ""}
               </dd>
             </div>
             <div className="col-span-2 flex flex-wrap gap-x-6 gap-y-1">
-              <dt className="font-semibold">Scope:</dt>
+              <dt className="font-semibold">{t("reports.scope")}</dt>
               {snapshot.scopeLines.map((l) => (
                 <dd key={l}>{l}</dd>
               ))}
@@ -323,7 +333,7 @@ function ReportCenter() {
                       key={c.key}
                       className={`border border-border bg-muted px-2 py-1.5 font-semibold ${c.numeric ? "text-right" : "text-left"}`}
                     >
-                      {c.label}
+                      {t(`v.${c.label}`)}
                     </th>
                   ))}
                 </tr>
@@ -332,7 +342,7 @@ function ReportCenter() {
                 {result.rows.length === 0 && (
                   <tr>
                     <td className="border border-border px-2 py-3 text-center" colSpan={result.columns.length + 1}>
-                      No records match the selected scope.
+                      {t("reports.noRows")}
                     </td>
                   </tr>
                 )}
@@ -370,26 +380,25 @@ function ReportCenter() {
 
           <div className="print-signatures mt-10 grid grid-cols-2 gap-10 text-xs">
             <div>
-              <p className="border-t border-foreground pt-1 font-semibold">Prepared by</p>
+              <p className="border-t border-foreground pt-1 font-semibold">{t("reports.preparedBy")}</p>
               <p className="mt-1">{result.generatedBy}</p>
-              <p className="mt-6">Signature: ______________________</p>
-              <p className="mt-2">Date: ______________________</p>
+              <p className="mt-6">{t("reports.signature")}</p>
+              <p className="mt-2">{t("reports.date")}</p>
             </div>
             <div>
-              <p className="border-t border-foreground pt-1 font-semibold">Approved by</p>
-              <p className="mt-1">Subcity Administrator</p>
-              <p className="mt-6">Signature: ______________________</p>
-              <p className="mt-2">Official stamp / date: ______________</p>
+              <p className="border-t border-foreground pt-1 font-semibold">{t("reports.approvedBy")}</p>
+              <p className="mt-1">{t("role.subcity_admin")}</p>
+              <p className="mt-6">{t("reports.signature")}</p>
+              <p className="mt-2">{t("reports.stamp")}</p>
             </div>
           </div>
 
           <div className="mt-8 border-t border-border pt-2 text-center text-[10px] text-muted-foreground">
-            Malkaa Nono Subcity Administration · Official Administrative Report · This document is generated from the
-            official resident and establishment registry.
+            {t("reports.footer")}
           </div>
 
           <div className="print-footer print-only text-center">
-            Malkaa Nono Subcity Administration — Official Administrative Report · Page <span className="print-page-number" />
+            {t("reports.pageFooter")} <span className="print-page-number" />
           </div>
         </section>
       )}
