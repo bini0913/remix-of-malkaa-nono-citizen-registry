@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Check, X } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/duplicates")({
   head: () => ({
@@ -30,6 +31,7 @@ const PERSON_COLS =
   "id, full_name, sex, date_of_birth, zone_id, primary_phone, address_detail, has_national_id, status, created_at";
 
 function Duplicates() {
+  const t = useT();
   const { data: scope } = useScope();
   const { data: hierarchy } = useHierarchy();
   const qc = useQueryClient();
@@ -59,8 +61,8 @@ function Duplicates() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Administrator access only</CardTitle>
-          <CardDescription>Duplicate review is carried out by woreda and subcity administrators.</CardDescription>
+          <CardTitle>{t("common.adminOnly")}</CardTitle>
+          <CardDescription>{t("dupes.adminOnlyBody")}</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -86,12 +88,12 @@ function Duplicates() {
         })
         .eq("id", flagId);
       if (fErr) throw fErr;
-      toast.success(confirm ? "Marked as duplicate" : "Flag dismissed — both records remain active");
+      toast.success(confirm ? t("dupes.confirmed") : t("dupes.dismissed"));
       qc.invalidateQueries({ queryKey: ["duplicate-flags"] });
       qc.invalidateQueries({ queryKey: ["residents"] });
       qc.invalidateQueries({ queryKey: ["report-persons"] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not resolve the flag");
+      toast.error(err instanceof Error ? err.message : t("dupes.failed"));
     }
   };
 
@@ -114,25 +116,25 @@ function Duplicates() {
         <Badge variant="secondary">{label}</Badge>
         <Button asChild size="sm" variant="ghost">
           <Link to="/person/$id" params={{ id: p.id }}>
-            Open
+            {t("common.open")}
           </Link>
         </Button>
       </div>
       <p className="text-base font-medium text-foreground">{p.full_name}</p>
       <dl className="grid grid-cols-2 gap-x-3 text-xs text-muted-foreground">
-        <dt>Date of birth</dt>
+        <dt>{t("dupes.dob")}</dt>
         <dd>{p.date_of_birth ?? "—"}</dd>
-        <dt>Sex</dt>
+        <dt>{t("common.sex")}</dt>
         <dd className="capitalize">{p.sex ?? "—"}</dd>
-        <dt>Zone</dt>
+        <dt>{t("common.zone")}</dt>
         <dd>{zoneName(p.zone_id)}</dd>
-        <dt>Phone</dt>
+        <dt>{t("common.phone")}</dt>
         <dd>{p.primary_phone ?? "—"}</dd>
-        <dt>Address</dt>
+        <dt>{t("dupes.address")}</dt>
         <dd>{p.address_detail ?? "—"}</dd>
-        <dt>Fayda</dt>
-        <dd>{p.has_national_id ? "Yes" : "No"}</dd>
-        <dt>Registered</dt>
+        <dt>{t("dupes.fayda")}</dt>
+        <dd>{p.has_national_id ? t("common.yes") : t("common.no")}</dd>
+        <dt>{t("dupes.registered")}</dt>
         <dd>{new Date(p.created_at).toLocaleDateString()}</dd>
       </dl>
     </div>
@@ -141,20 +143,17 @@ function Duplicates() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Duplicate review</h1>
-        <p className="text-sm text-muted-foreground">
-          Possible duplicates flagged at registration. Confirming keeps both rows — the newer one is marked as a
-          duplicate of the original.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t("dupes.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("dupes.subtitle")}</p>
       </header>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading flags…</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">{t("dupes.loading")}</p>}
 
       {(flags ?? []).length === 0 && !isLoading && (
         <Card>
           <CardHeader>
-            <CardTitle>No pending flags</CardTitle>
-            <CardDescription>Every possible duplicate in your scope has been reviewed.</CardDescription>
+            <CardTitle>{t("dupes.noneTitle")}</CardTitle>
+            <CardDescription>{t("dupes.noneBody")}</CardDescription>
           </CardHeader>
         </Card>
       )}
@@ -166,22 +165,22 @@ function Duplicates() {
         return (
           <Card key={f.id}>
             <CardHeader>
-              <CardTitle className="text-base">Possible duplicate · {np.full_name}</CardTitle>
-              <CardDescription>Flagged {new Date(f.created_at).toLocaleString()}</CardDescription>
+              <CardTitle className="text-base">{t("dupes.possible", { name: np.full_name })}</CardTitle>
+              <CardDescription>{t("dupes.flagged", { when: new Date(f.created_at).toLocaleString() })}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col gap-4 md:flex-row">
-                <Side p={ep} label="Existing record" />
-                <Side p={np} label="New record" />
+                <Side p={ep} label={t("dupes.existing")} />
+                <Side p={np} label={t("dupes.new")} />
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button onClick={() => resolve(f.id, np.id, ep.id, true)}>
                   <Check className="size-4" />
-                  Confirm duplicate
+                  {t("dupes.confirm")}
                 </Button>
                 <Button variant="outline" onClick={() => resolve(f.id, np.id, ep.id, false)}>
                   <X className="size-4" />
-                  Dismiss — different people
+                  {t("dupes.dismiss")}
                 </Button>
               </div>
             </CardContent>

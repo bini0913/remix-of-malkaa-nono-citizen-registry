@@ -140,11 +140,11 @@ export const formsEn: Record<string, string> = {
   "pp.toast.eventRecorded": "Life event recorded",
   "pp.toast.eventFailed": "Could not record the event",
 
-  "v.birth": "Dhalachuu",
-  "v.marriage": "Gaa'ela",
-  "v.death": "Du'a",
-  "v.relocation": "Iddoo jijjiirraa",
-  "v.divorce": "Wal-hiikuu",
+  "v.birth": "Birth",
+  "v.marriage": "Marriage",
+  "v.death": "Death",
+  "v.relocation": "Relocation",
+  "v.divorce": "Divorce",
 };
 
 export const formsOm: Record<string, string> = {
