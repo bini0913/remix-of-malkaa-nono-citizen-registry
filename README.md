@@ -21,6 +21,44 @@ npm i
 npm run dev
 ```
 
+## Deploy to Vercel
+
+This project is configured for Vercel out of the box.
+
+### One-click deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=<this-repository-url>)
+
+### Manual deploy
+
+1. Push this repository to GitHub.
+2. Import the repository in [Vercel](https://vercel.com).
+3. In **Project Settings → Environment Variables**, add every variable from `.env.example`.
+4. Use the default Vercel settings — `vercel.json` already sets the install/build commands.
+5. Deploy.
+
+### Environment variables
+
+Copy the values from `.env.example` into Vercel:
+
+| Variable | Type | Purpose |
+|----------|------|---------|
+| `VITE_SUPABASE_URL` | Public | Lovable Cloud / Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Public | Anonymous/public API key |
+| `VITE_SUPABASE_PROJECT_ID` | Public | Project ID |
+| `SUPABASE_URL` | Secret | Server-side project URL |
+| `SUPABASE_PUBLISHABLE_KEY` | Secret | Server-side public key |
+| `SUPABASE_PROJECT_ID` | Secret | Server-side project ID |
+| `SUPABASE_SERVICE_ROLE_KEY` | Secret | Only needed for admin/service operations |
+
+> **Note:** `VITE_*` variables are bundled into the browser. Never put the service role key in a `VITE_` variable.
+
+### Build behavior
+
+- `vercel.json` tells Vercel to use `bun install` and `bun run build`.
+- `vite.config.ts` detects the `VERCEL=1` environment variable and switches the Nitro preset to `vercel` automatically.
+- The output is emitted to `.vercel/output`.
+
 ## Built with
 
 - TanStack Start
