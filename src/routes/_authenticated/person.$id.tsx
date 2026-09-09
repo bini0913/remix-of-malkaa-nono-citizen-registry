@@ -26,6 +26,7 @@ import {
   TIER_LABEL,
 } from "@/lib/registry";
 import { toast } from "sonner";
+import { useT } from "@/lib/i18n";
 import { ArrowLeft, CalendarPlus, Save } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/person/$id")({
@@ -57,6 +58,7 @@ function PersonProfile() {
   const { id } = Route.useParams();
   const { data: scope } = useScope();
   const { data: hierarchy } = useHierarchy();
+  const t = useT();
   const qc = useQueryClient();
 
   const { data: person, isLoading } = useQuery({
@@ -120,17 +122,17 @@ function PersonProfile() {
     if (person?.status) setStatusValue(person.status);
   }, [person?.status]);
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">Loading record…</p>;
+  if (isLoading) return <p className="text-sm text-muted-foreground">{t("pp.loading")}</p>;
   if (!person)
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Record unavailable</CardTitle>
-          <CardDescription>This record does not exist or is outside your assigned scope.</CardDescription>
+          <CardTitle>{t("pp.recordUnavailable")}</CardTitle>
+          <CardDescription>{t("pp.outOfScope")}</CardDescription>
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline">
-            <Link to="/residents">Back to residents</Link>
+            <Link to="/residents">{t("pp.backToResidents")}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -163,17 +165,17 @@ function PersonProfile() {
         is_stub: Boolean(form["is_stub"]),
       };
       if (!payload.full_name) {
-        toast.error("Full name is required");
+        toast.error(t("pp.toast.fullNameRequired"));
         return;
       }
       const { error } = await supabase.from("persons").update(payload).eq("id", id);
       if (error) throw error;
-      toast.success("Record updated");
+      toast.success(t("pp.toast.recordUpdated"));
       qc.invalidateQueries({ queryKey: ["person", id] });
       qc.invalidateQueries({ queryKey: ["person-audit", id] });
       qc.invalidateQueries({ queryKey: ["residents"] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Update failed");
+      toast.error(err instanceof Error ? err.message : t("pp.toast.updateFailed"));
     } finally {
       setBusy(false);
     }
@@ -181,17 +183,17 @@ function PersonProfile() {
 
   const completeStub = async () => {
     setForm((f) => ({ ...f, is_stub: false }));
-    toast.info("Fill in the remaining fields, then press Save changes to complete this record.");
+    toast.info(t("pp.toast.fillRemaining"));
   };
 
   const applyStatus = async () => {
     if (!statusValue) return;
     if (statusValue === person.status) {
-      toast.info("That is already the current vital status.");
+      toast.info(t("pp.toast.alreadyCurrentStatus"));
       return;
     }
     if (statusReason.trim().length < 3) {
-      toast.error("A short reason is required when changing vital status");
+      toast.error(t("pp.toast.reasonRequired"));
       return;
     }
     setBusy(true);
@@ -213,7 +215,7 @@ function PersonProfile() {
           recorded_by: scope?.userId ?? null,
         });
       }
-      toast.success(`Vital status set to ${STATUS_LABEL[statusValue] ?? statusValue}`);
+      toast.success(t("pp.toast.statusSet", { status: t(`v.${STATUS_LABEL[statusValue] ?? statusValue}`) }));
       setStatusReason("");
       setStatusDate("");
       qc.invalidateQueries({ queryKey: ["person", id] });
@@ -221,7 +223,7 @@ function PersonProfile() {
       qc.invalidateQueries({ queryKey: ["person-audit", id] });
       qc.invalidateQueries({ queryKey: ["residents"] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Status change failed");
+      toast.error(err instanceof Error ? err.message : t("pp.toast.statusFailed"));
     } finally {
       setBusy(false);
     }
@@ -229,7 +231,7 @@ function PersonProfile() {
 
   const addEvent = async () => {
     if (!eventType) {
-      toast.error("Select an event type");
+      toast.error(t("pp.toast.selectEventType"));
       return;
     }
     setBusy(true);
@@ -242,13 +244,13 @@ function PersonProfile() {
         recorded_by: scope?.userId ?? null,
       });
       if (error) throw error;
-      toast.success("Life event recorded");
+      toast.success(t("pp.toast.eventRecorded"));
       setEventType("");
       setEventDate("");
       setEventNotes("");
       qc.invalidateQueries({ queryKey: ["life-events", id] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not record the event");
+      toast.error(err instanceof Error ? err.message : t("pp.toast.eventFailed"));
     } finally {
       setBusy(false);
     }
@@ -259,13 +261,13 @@ function PersonProfile() {
       <Label>{label}</Label>
       <Select value={val(key) || NONE} onValueChange={(v) => set(key, v === NONE ? "" : v)}>
         <SelectTrigger>
-          <SelectValue placeholder="Select" />
+          <SelectValue placeholder={t("pf.select")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={NONE}>Not recorded</SelectItem>
+          <SelectItem value={NONE}>{t("pp.notRecorded")}</SelectItem>
           {options.map((o) => (
             <SelectItem key={o} value={o}>
-              {o}
+              {t(`v.${o}`)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -280,21 +282,21 @@ function PersonProfile() {
           <Button asChild variant="ghost" size="sm" className="-ml-2 mb-1">
             <Link to="/residents">
               <ArrowLeft className="size-4" />
-              Residents
+              {t("pp.residents")}
             </Link>
           </Button>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">{person.full_name}</h1>
           <p className="text-sm text-muted-foreground">
-            {zoneName} · {tier ? TIER_LABEL[tier] : "Age unknown"} ·{" "}
-            {STATUS_LABEL[person.status] ?? person.status}
+            {zoneName} · {tier ? t(`tier.${tier}`) : t("pp.ageUnknown")} ·{" "}
+            {t(`v.${STATUS_LABEL[person.status] ?? person.status}`)}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {person.is_stub && <Badge variant="outline">Incomplete record</Badge>}
+          {person.is_stub && <Badge variant="outline">{t("pp.incompleteRecord")}</Badge>}
           {person.has_national_id ? (
-            <Badge variant="secondary">Has Fayda</Badge>
+            <Badge variant="secondary">{t("dash.hasFayda")}</Badge>
           ) : (
-            <Badge variant="destructive">No Fayda</Badge>
+            <Badge variant="destructive">{t("dash.noFayda")}</Badge>
           )}
         </div>
       </header>
@@ -302,15 +304,12 @@ function PersonProfile() {
       {person.is_stub && (
         <Card>
           <CardHeader>
-            <CardTitle>Complete this guardian record</CardTitle>
-            <CardDescription>
-              This record was created as a placeholder during a child&apos;s registration. Completing it keeps the same
-              record — no duplicate person is created.
-            </CardDescription>
+            <CardTitle>{t("pp.completeGuardianTitle")}</CardTitle>
+            <CardDescription>{t("pp.completeGuardianBody")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button variant="outline" onClick={completeStub} disabled={form["is_stub"] === false}>
-              {form["is_stub"] === false ? "Marked for completion — save below" : "Upgrade to full profile"}
+              {form["is_stub"] === false ? t("pp.markedForCompletion") : t("pp.upgradeToFullProfile")}
             </Button>
           </CardContent>
         </Card>
@@ -318,70 +317,70 @@ function PersonProfile() {
 
       <Tabs defaultValue="details">
         <TabsList>
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="status">Vital status</TabsTrigger>
-          <TabsTrigger value="events">Life events</TabsTrigger>
+          <TabsTrigger value="details">{t("pp.tab.details")}</TabsTrigger>
+          <TabsTrigger value="status">{t("pp.tab.status")}</TabsTrigger>
+          <TabsTrigger value="events">{t("pp.tab.events")}</TabsTrigger>
           {(scope?.role === "subcity_admin" || scope?.role === "woreda_admin") && (
-            <TabsTrigger value="audit">Audit trail</TabsTrigger>
+            <TabsTrigger value="audit">{t("pp.tab.audit")}</TabsTrigger>
           )}
         </TabsList>
 
         <TabsContent value="details" className="space-y-6 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Core details</CardTitle>
+              <CardTitle>{t("pp.coreDetails")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Full name *</Label>
+                <Label>{t("pp.fullName")}</Label>
                 <Input value={val("full_name")} onChange={(e) => set("full_name", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Date of birth</Label>
+                <Label>{t("pp.dob")}</Label>
                 <Input type="date" value={val("date_of_birth")} onChange={(e) => set("date_of_birth", e.target.value)} />
                 <p className="text-xs text-muted-foreground">
-                  {age !== null ? `Computed age: ${age} years` : "Age is computed from the date of birth."}
+                  {age !== null ? t("pp.computedAge", { age: String(age) }) : t("pp.ageHint")}
                 </p>
               </div>
               <div className="space-y-2">
-                <Label>Sex</Label>
+                <Label>{t("pp.sex")}</Label>
                 <Select value={val("sex") || NONE} onValueChange={(v) => set("sex", v === NONE ? "" : v)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select" />
+                    <SelectValue placeholder={t("pf.select")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NONE}>Not recorded</SelectItem>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value={NONE}>{t("pp.notRecorded")}</SelectItem>
+                    <SelectItem value="male">{t("common.male")}</SelectItem>
+                    <SelectItem value="female">{t("common.female")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Nationality status</Label>
+                <Label>{t("pp.nationalityStatus")}</Label>
                 <Select
                   value={val("nationality_status") || NONE}
                   onValueChange={(v) => set("nationality_status", v === NONE ? "" : v)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select" />
+                    <SelectValue placeholder={t("pf.select")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NONE}>Not recorded</SelectItem>
+                    <SelectItem value={NONE}>{t("pp.notRecorded")}</SelectItem>
                     {NATIONALITY_OPTIONS.map((o) => (
                       <SelectItem key={o.value} value={o.value}>
-                        {o.label}
+                        {t(`v.${o.label}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              {selectField("Relationship to household head", "relationship_to_head", RELATIONSHIPS)}
+              {selectField(t("pf.relationship"), "relationship_to_head", RELATIONSHIPS)}
               <div className="space-y-2">
-                <Label>Zone</Label>
+                <Label>{t("pp.zone")}</Label>
                 <Input value={zoneName} readOnly />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label>Address detail</Label>
+                <Label>{t("pp.addressDetail")}</Label>
                 <Textarea rows={2} value={val("address_detail")} onChange={(e) => set("address_detail", e.target.value)} />
               </div>
             </CardContent>
@@ -389,15 +388,15 @@ function PersonProfile() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Contact & guardian</CardTitle>
+              <CardTitle>{t("pp.contactGuardian")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Primary phone</Label>
+                <Label>{t("pp.primaryPhone")}</Label>
                 <Input value={val("primary_phone")} onChange={(e) => set("primary_phone", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Secondary phone</Label>
+                <Label>{t("pp.secondaryPhone")}</Label>
                 <Input value={val("secondary_phone")} onChange={(e) => set("secondary_phone", e.target.value)} />
               </div>
               <label className="flex items-center gap-2 text-sm text-muted-foreground md:col-span-2">
@@ -405,10 +404,10 @@ function PersonProfile() {
                   checked={Boolean(form["phone_unreachable"])}
                   onCheckedChange={(v) => set("phone_unreachable", v === true)}
                 />
-                No reachable phone number available
+                {t("pp.unreachable")}
               </label>
               <div className="space-y-2 md:col-span-2">
-                <Label>Guardian full name</Label>
+                <Label>{t("pp.guardianFullName")}</Label>
                 <Input value={val("guardian_full_name")} onChange={(e) => set("guardian_full_name", e.target.value)} />
               </div>
             </CardContent>
@@ -416,7 +415,7 @@ function PersonProfile() {
 
           <Card>
             <CardHeader>
-              <CardTitle>National ID (Fayda)</CardTitle>
+              <CardTitle>{t("pp.nationalId")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <label className="flex items-center gap-2 text-sm text-muted-foreground md:col-span-2">
@@ -424,14 +423,14 @@ function PersonProfile() {
                   checked={Boolean(form["has_national_id"])}
                   onCheckedChange={(v) => set("has_national_id", v === true)}
                 />
-                This resident holds a National ID (Fayda)
+                {t("pp.hasFaydaCheckbox")}
               </label>
               <div className="space-y-2">
-                <Label>FAN number</Label>
+                <Label>{t("pp.fan")}</Label>
                 <Input value={val("fan_number")} onChange={(e) => set("fan_number", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>FIN number</Label>
+                <Label>{t("pp.fin")}</Label>
                 <Input value={val("fin_number")} onChange={(e) => set("fin_number", e.target.value)} />
               </div>
             </CardContent>
@@ -439,23 +438,23 @@ function PersonProfile() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Socio-economic details</CardTitle>
+              <CardTitle>{t("pp.socioEconomic")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-              {selectField("Education level", "education_level", EDUCATION_LEVELS)}
-              {selectField("Employment status", "employment_status", EMPLOYMENT_STATUSES)}
-              {selectField("Marital status", "marital_status", MARITAL_STATUSES)}
-              {selectField("Religion", "religion", RELIGIONS)}
+              {selectField(t("pp.educationLevel"), "education_level", EDUCATION_LEVELS)}
+              {selectField(t("pp.employmentStatus"), "employment_status", EMPLOYMENT_STATUSES)}
+              {selectField(t("pp.maritalStatus"), "marital_status", MARITAL_STATUSES)}
+              {selectField(t("pp.religion"), "religion", RELIGIONS)}
               <div className="space-y-2">
-                <Label>Occupation</Label>
+                <Label>{t("pp.occupation")}</Label>
                 <Input value={val("occupation")} onChange={(e) => set("occupation", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Pension status</Label>
+                <Label>{t("pp.pensionStatus")}</Label>
                 <Input value={val("pension_status")} onChange={(e) => set("pension_status", e.target.value)} />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label>Notes</Label>
+                <Label>{t("pp.notes")}</Label>
                 <Textarea rows={3} value={val("notes")} onChange={(e) => set("notes", e.target.value)} />
               </div>
             </CardContent>
@@ -464,7 +463,7 @@ function PersonProfile() {
           <div className="flex justify-end">
             <Button onClick={save} disabled={busy}>
               <Save className="size-4" />
-              Save changes
+              {t("pp.saveChanges")}
             </Button>
           </div>
         </TabsContent>
@@ -472,39 +471,36 @@ function PersonProfile() {
         <TabsContent value="status" className="pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Vital status</CardTitle>
-              <CardDescription>
-                Records are never deleted. Changing the vital status is recorded in the audit trail, and death or
-                relocation also creates a life event.
-              </CardDescription>
+              <CardTitle>{t("pp.vitalStatus")}</CardTitle>
+              <CardDescription>{t("pp.vitalStatusHint")}</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Status</Label>
+                <Label>{t("pp.status")}</Label>
                 <Select value={statusValue} onValueChange={setStatusValue}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={t("pp.selectStatus")} />
                   </SelectTrigger>
                   <SelectContent>
                     {STATUSES.map((st) => (
                       <SelectItem key={st} value={st}>
-                        {STATUS_LABEL[st]}
+                        {t(`v.${STATUS_LABEL[st]}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Date of event (optional)</Label>
+                <Label>{t("pp.dateOfEventOptional")}</Label>
                 <Input type="date" value={statusDate} onChange={(e) => setStatusDate(e.target.value)} />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label>Reason / note *</Label>
+                <Label>{t("pp.reasonNote")}</Label>
                 <Textarea rows={3} value={statusReason} onChange={(e) => setStatusReason(e.target.value)} />
               </div>
               <div className="md:col-span-2">
                 <Button onClick={applyStatus} disabled={busy}>
-                  Apply status change
+                  {t("pp.applyStatusChange")}
                 </Button>
               </div>
             </CardContent>
@@ -514,36 +510,36 @@ function PersonProfile() {
         <TabsContent value="events" className="space-y-6 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Add life event</CardTitle>
+              <CardTitle>{t("pp.addLifeEvent")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label>Event type</Label>
+                <Label>{t("pp.eventType")}</Label>
                 <Select value={eventType} onValueChange={setEventType}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select" />
+                    <SelectValue placeholder={t("pf.select")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {EVENT_TYPES.map((t) => (
-                      <SelectItem key={t} value={t} className="capitalize">
-                        {t}
+                    {EVENT_TYPES.map((ev) => (
+                      <SelectItem key={ev} value={ev}>
+                        {t(`v.${ev}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Event date</Label>
+                <Label>{t("pp.eventDate")}</Label>
                 <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Notes</Label>
+                <Label>{t("pp.notes")}</Label>
                 <Input value={eventNotes} onChange={(e) => setEventNotes(e.target.value)} />
               </div>
               <div className="md:col-span-3">
                 <Button onClick={addEvent} disabled={busy}>
                   <CalendarPlus className="size-4" />
-                  Record event
+                  {t("pp.recordEvent")}
                 </Button>
               </div>
             </CardContent>
@@ -551,19 +547,19 @@ function PersonProfile() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Timeline</CardTitle>
+              <CardTitle>{t("pp.timeline")}</CardTitle>
             </CardHeader>
             <CardContent>
               {(events ?? []).length === 0 ? (
-                <p className="text-sm text-muted-foreground">No life events recorded for this resident yet.</p>
+                <p className="text-sm text-muted-foreground">{t("pp.noEventsYet")}</p>
               ) : (
                 <ol className="relative space-y-5 border-l pl-6">
                   {(events ?? []).map((ev) => (
                     <li key={ev.id} className="relative">
                       <span className="absolute -left-[27px] top-1.5 size-3 rounded-full bg-primary" />
-                      <p className="text-sm font-medium capitalize text-foreground">{ev.event_type}</p>
+                      <p className="text-sm font-medium text-foreground">{t(`v.${ev.event_type}`)}</p>
                       <p className="text-xs text-muted-foreground">
-                        {ev.event_date ?? "Date not recorded"} · logged {new Date(ev.created_at).toLocaleDateString()}
+                        {ev.event_date ?? t("pp.dateNotRecorded")} · {t("pp.logged", { date: new Date(ev.created_at).toLocaleDateString() })}
                       </p>
                       {ev.notes && <p className="mt-1 text-sm text-muted-foreground">{ev.notes}</p>}
                     </li>
@@ -578,19 +574,19 @@ function PersonProfile() {
           <TabsContent value="audit" className="pt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Audit trail</CardTitle>
-                <CardDescription>Every change made to this record, newest first.</CardDescription>
+                <CardTitle>{t("pp.auditTrail")}</CardTitle>
+                <CardDescription>{t("pp.auditHint")}</CardDescription>
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>When</TableHead>
-                      <TableHead>Action</TableHead>
-                      <TableHead>Field</TableHead>
-                      <TableHead>From</TableHead>
-                      <TableHead>To</TableHead>
-                      <TableHead>Role</TableHead>
+                      <TableHead>{t("pp.when")}</TableHead>
+                      <TableHead>{t("pp.action")}</TableHead>
+                      <TableHead>{t("pp.field")}</TableHead>
+                      <TableHead>{t("pp.from")}</TableHead>
+                      <TableHead>{t("pp.to")}</TableHead>
+                      <TableHead>{t("pp.role")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -609,7 +605,7 @@ function PersonProfile() {
                     {(audit ?? []).length === 0 && (
                       <TableRow>
                         <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                          No audit entries yet.
+                          {t("pp.noAuditEntries")}
                         </TableCell>
                       </TableRow>
                     )}
