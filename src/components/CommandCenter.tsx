@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { TIER_LABEL, VERIFICATION_LABEL, STATUS_LABEL } from "@/lib/registry";
+import { VERIFICATION_LABEL, STATUS_LABEL } from "@/lib/registry";
 import { CATEGORY_LABEL, EST_STATUS_LABEL } from "@/lib/establishments";
 import { Building2, FileText, IdCard, Users } from "lucide-react";
 import { useT } from "@/lib/i18n";
@@ -146,7 +146,7 @@ export function CommandCenter() {
   ];
 
   const ageSeries = ["baby", "child", "youth", "adult", "elder", "unknown"].map((k) => ({
-    name: k === "unknown" ? t("common.unknown") : TIER_LABEL[k as keyof typeof TIER_LABEL],
+    name: k === "unknown" ? t("common.unknown") : t(`tier.${k}`),
     value: r.by_age_tier?.[k] ?? 0,
   }));
 
@@ -213,13 +213,13 @@ export function CommandCenter() {
           />
           <ChartCard
             title={t("cc.registrationStatus")}
-            data={toSeries(r.by_status, (k) => STATUS_LABEL[k] ?? k)}
+            data={toSeries(r.by_status, (k) => t(`v.${STATUS_LABEL[k] ?? k}`))}
             description={t("cc.registrationStatusHint")}
             kind="pie"
           />
           <ChartCard
             title={t("cc.verificationStatus")}
-            data={toSeries(r.by_verification, (k) => VERIFICATION_LABEL[k] ?? k)}
+            data={toSeries(r.by_verification, (k) => t(`v.${VERIFICATION_LABEL[k] ?? k}`))}
             kind="pie"
           />
         </div>
@@ -230,19 +230,19 @@ export function CommandCenter() {
         <div className="grid gap-4 lg:grid-cols-2">
           <ChartCard
             title={t("cc.byCategory")}
-            data={toSeries(e.by_category, (k) => CATEGORY_LABEL[k] ?? k)}
+            data={toSeries(e.by_category, (k) => t(`v.${CATEGORY_LABEL[k] ?? k}`))}
             kind="bar"
           />
           <ChartCard title={t("cc.byWoreda")} data={e.by_woreda ?? []} kind="bar" />
           <ChartCard
             title={t("cc.operatingStatus")}
-            data={toSeries(e.by_status, (k) => EST_STATUS_LABEL[k] ?? k)}
+            data={toSeries(e.by_status, (k) => EST_t(`v.${STATUS_LABEL[k] ?? k}`))}
             description={t("cc.operatingStatusHint")}
             kind="pie"
           />
           <ChartCard
             title={t("cc.verificationStatus")}
-            data={toSeries(e.by_verification, (k) => VERIFICATION_LABEL[k] ?? k)}
+            data={toSeries(e.by_verification, (k) => t(`v.${VERIFICATION_LABEL[k] ?? k}`))}
             kind="pie"
           />
         </div>

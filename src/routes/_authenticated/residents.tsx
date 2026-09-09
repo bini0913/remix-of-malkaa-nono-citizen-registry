@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ageTier, calcAge, STATUS_LABEL, TIER_LABEL } from "@/lib/registry";
+import { ageTier, calcAge, STATUS_LABEL } from "@/lib/registry";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/residents")({
@@ -111,7 +111,7 @@ function Residents() {
                       )}
                     </TableCell>
 
-                    <TableCell>{tier ? TIER_LABEL[tier] : "—"}</TableCell>
+                    <TableCell>{tier ? t(`tier.${tier}`) : "—"}</TableCell>
                     <TableCell className="capitalize">{r.sex ?? "—"}</TableCell>
                     <TableCell>{zoneName(r.zone_id)}</TableCell>
                     <TableCell>{r.primary_phone ?? "—"}</TableCell>

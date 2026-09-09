@@ -420,7 +420,7 @@ function Dashboard() {
           kind="bar"
           data={tally(filtered, (r) => {
             const tier = ageTier(calcAge(r.date_of_birth));
-            return tier ? TIER_LABEL[tier] : null;
+            return tier ? t(`tier.${tier}`) : null;
           }, t("common.notRecorded"))}
         />
         <ChartCard title={t("common.sex")} kind="pie" data={tally(filtered, (r) => (r.sex ? r.sex : null), t("common.notRecorded"))} />
