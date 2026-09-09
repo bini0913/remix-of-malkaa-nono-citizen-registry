@@ -3,10 +3,6 @@
   "framework": null,
   "installCommand": "bun install",
   "buildCommand": "bun run build",
-  "outputDirectory": ".vercel/output",
-  "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/" }
-  ],
   "headers": [
     {
       "source": "/(.*)",
