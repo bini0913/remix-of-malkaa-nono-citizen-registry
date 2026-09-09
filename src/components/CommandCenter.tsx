@@ -236,7 +236,7 @@ export function CommandCenter() {
           <ChartCard title={t("cc.byWoreda")} data={e.by_woreda ?? []} kind="bar" />
           <ChartCard
             title={t("cc.operatingStatus")}
-            data={toSeries(e.by_status, (k) => EST_t(`v.${STATUS_LABEL[k] ?? k}`))}
+            data={toSeries(e.by_status, (k) => t(`v.${EST_STATUS_LABEL[k] ?? k}`))}
             description={t("cc.operatingStatusHint")}
             kind="pie"
           />
