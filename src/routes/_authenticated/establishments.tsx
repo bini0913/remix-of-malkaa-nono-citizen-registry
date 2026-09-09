@@ -211,7 +211,7 @@ function Establishments() {
             <form onSubmit={submit} className="grid gap-4 md:grid-cols-3">
               {field(t("est.name"), "name")}
               <div className="space-y-2">
-                <Label>Category</Label>
+                <Label>{t("reports.category")}</Label>
                 <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                   <SelectTrigger>
                     <SelectValue />
