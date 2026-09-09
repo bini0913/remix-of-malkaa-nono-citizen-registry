@@ -43,15 +43,16 @@ Copy the values from `.env.example` into Vercel:
 
 | Variable | Type | Purpose |
 |----------|------|---------|
-| `VITE_SUPABASE_URL` | Public | Lovable Cloud / Supabase project URL |
+| `VITE_SUPABASE_URL` | Public | Lovable Cloud / backend project URL |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Public | Anonymous/public API key |
 | `VITE_SUPABASE_PROJECT_ID` | Public | Project ID |
 | `SUPABASE_URL` | Secret | Server-side project URL |
 | `SUPABASE_PUBLISHABLE_KEY` | Secret | Server-side public key |
 | `SUPABASE_PROJECT_ID` | Secret | Server-side project ID |
 | `SUPABASE_SERVICE_ROLE_KEY` | Secret | Only needed for admin/service operations |
+| `LOVABLE_CRON_SECRET` | Secret | Optional — only for cron/webhook endpoints |
 
-> **Note:** `VITE_*` variables are bundled into the browser. Never put the service role key in a `VITE_` variable.
+> **Note:** `VITE_*` variables are bundled into the browser. Never put the service role key or cron secret in a `VITE_` variable.
 
 ### Build behavior
 
