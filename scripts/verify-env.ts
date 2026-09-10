@@ -16,7 +16,7 @@ const optionalButRecommended = [
 function missing(vars: string[]): string[] {
   return vars.filter((key) => {
     const value = process.env[key];
-    return !value || value.trim() === "" || value.includes("=");
+    return !value || value.trim() === "";
   });
 }
 
