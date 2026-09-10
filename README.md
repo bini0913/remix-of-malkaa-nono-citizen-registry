@@ -2,63 +2,65 @@
 
 This project was built with [Lovable](https://lovable.dev).
 
-## Build with Lovable
-
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
-
 ## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
 git clone <this-repository-url>
 cd <repository-name>
-npm i
-npm run dev
+bun install
+bun run dev
 ```
 
-## Deploy to Vercel
+## Deploy to Vercel (frontend) + Lovable Cloud (backend)
 
-This project is configured for Vercel out of the box.
+This app uses **Vercel** for hosting and **Lovable Cloud** for the database, auth, and storage.
 
-### One-click deploy
+### 1. Push the repository to GitHub
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=<this-repository-url>)
+Make sure `.env` is **not** committed (it is already in `.gitignore`).
 
-### Manual deploy
+### 2. Import into Vercel
 
-1. Push this repository to GitHub.
-2. Import the repository in [Vercel](https://vercel.com).
-3. In **Project Settings → Environment Variables**, add every variable from `.env.example`.
-4. Use the default Vercel settings — `vercel.json` already sets the install/build commands.
-5. Deploy.
+1. Go to [vercel.com](https://vercel.com) and create a new project.
+2. Import the GitHub repository.
+3. Vercel will read `vercel.json`, so the build/install/output settings are already locked in:
+   - **Install Command:** `bun install`
+   - **Build Command:** `bun run build:vercel`
+   - **Output Directory:** `.vercel/output`
+   - **Framework Preset:** `Other` (`framework: null`)
 
-### Environment variables
+### 3. Add environment variables
 
-Copy the values from `.env.example` into Vercel:
+In the Vercel project, go to **Settings → Environment Variables** and add every variable from `.env.example`.
+
+The easiest way is to copy the values from the `.env` file in this project root (created by Lovable Cloud):
 
 | Variable | Type | Purpose |
 |----------|------|---------|
-| `VITE_SUPABASE_URL` | Public | Lovable Cloud / backend project URL |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Public | Anonymous/public API key |
-| `VITE_SUPABASE_PROJECT_ID` | Public | Project ID |
-| `SUPABASE_URL` | Secret | Server-side project URL |
-| `SUPABASE_PUBLISHABLE_KEY` | Secret | Server-side public key |
-| `SUPABASE_PROJECT_ID` | Secret | Server-side project ID |
+| `VITE_SUPABASE_URL` | Public | Lovable Cloud project URL (used in the browser bundle) |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Public | Anonymous/public API key (used in the browser bundle) |
+| `VITE_SUPABASE_PROJECT_ID` | Public | Project reference ID |
+| `SUPABASE_URL` | Secret | Same project URL, used server-side |
+| `SUPABASE_PUBLISHABLE_KEY` | Secret | Same public key, used server-side |
+| `SUPABASE_PROJECT_ID` | Secret | Same project reference ID |
 | `SUPABASE_SERVICE_ROLE_KEY` | Secret | Only needed for admin/service operations |
-| `LOVABLE_CRON_SECRET` | Secret | Optional — only for cron/webhook endpoints |
+| `LOVABLE_CRON_SECRET` | Secret | Optional — only if you run Lovable-managed cron/webhook endpoints |
 
-> **Note:** `VITE_*` variables are bundled into the browser. Never put the service role key or cron secret in a `VITE_` variable.
+> **Security note:** `VITE_*` variables are embedded in the browser bundle. Never put `SUPABASE_SERVICE_ROLE_KEY` or `LOVABLE_CRON_SECRET` in a `VITE_*` variable.
 
-### Build behavior
+### 4. Deploy
 
-- `vercel.json` tells Vercel to use `bun install` and `bun run build`.
-- `vite.config.ts` detects the `VERCEL=1` environment variable and switches the Nitro preset to `vercel` automatically.
-- The output is emitted to `.vercel/output`.
+Click **Deploy**. The build will:
+
+1. Run `scripts/verify-env.ts` to confirm all required variables are present.
+2. Switch the Nitro preset to `vercel` automatically (handled by `vite.config.ts` when `VERCEL=1`).
+3. Emit the final output to `.vercel/output`.
+
+### Troubleshooting
+
+- **“Invalid supabaseUrl” error on the deployed site:** One or more `VITE_SUPABASE_*` variables are missing or empty in Vercel. Re-check the Environment Variables page, then redeploy.
+- **“Missing Supabase environment variable(s)” during build:** The `scripts/verify-env.ts` check caught missing variables. Add them in Vercel and redeploy.
+- **Build succeeds but server functions return 500:** Make sure the non-`VITE_` server-side variables (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`) are also set in Vercel.
 
 ## Built with
 
@@ -66,3 +68,4 @@ Copy the values from `.env.example` into Vercel:
 - TypeScript
 - React
 - Tailwind CSS
+- Lovable Cloud
